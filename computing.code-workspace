@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "dotfiles"
+		},
+		{
+			"path": "vscode"
+		},
+		{
+			"path": "raycast"
+		},
+		{
+			"path": "homelab"
+		}
+	],
+	"settings": {}
+}
