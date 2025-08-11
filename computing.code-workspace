@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "homelab"
+		},
+		{
+			"path": "home-assistant"
 		}
 	],
 	"settings": {}
