@@ -1,19 +1,28 @@
 {
 	"folders": [
 		{
-			"path": "dotfiles"
+			"name": "projects",
+			"path": "."
 		},
 		{
-			"path": "vscode"
+			"name": "dotfiles",
+			"path": "../dotfiles"
 		},
 		{
-			"path": "raycast"
+			"name": "homelab",
+			"path": "../homelab"
 		},
 		{
-			"path": "homelab"
+			"name": "home-assistant",
+			"path": "../home-assistant"
 		},
 		{
-			"path": "home-assistant"
+			"name": "vscode",
+			"path": "../vscode"
+		},
+		{
+			"name": "raycast",
+			"path": "../raycast"
 		}
 	],
 	"settings": {}
