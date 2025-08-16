@@ -1,10 +1,4 @@
-# Ignore all directories
-*/
-
-# But track workspace files
-!*.code-workspace
-
-# Also ignore these common files
+.claude
 .DS_Store
 .Spotlight-V100
 .Trashes
