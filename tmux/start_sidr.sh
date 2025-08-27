@@ -25,6 +25,13 @@ if [ $? != 0 ]; then
     tmux send-keys -t $SESSION_NAME:5 "source venv/bin/activate" C-m
     tmux send-keys -t $SESSION_NAME:5 "python" C-m
     
+    # Create a window for example project
+    tmux new-window -t $SESSION_NAME:6 -n "example" -c "$HOME/code/sidr-example-project" /bin/zsh
+    
+    # Create a window for R console in example project
+    tmux new-window -t $SESSION_NAME:7 -n "example-R" -c "$HOME/code/sidr-example-project" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:7 "R" C-m
+    
     # Activate virtual environment in the pipeline window
     tmux send-keys -t $SESSION_NAME:0 "source venv/bin/activate" C-m
     
