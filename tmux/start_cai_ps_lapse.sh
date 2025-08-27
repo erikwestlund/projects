@@ -3,7 +3,7 @@
 # Start CAI PS Lapse tmux session
 
 SESSION_NAME="cai"
-PROJECT_DIR="/Users/erikwestlund/code/cai-ps-lapse"
+PROJECT_DIR="$HOME/code/cai-ps-lapse"
 
 # Check if session already exists
 tmux has-session -t $SESSION_NAME 2>/dev/null
