@@ -39,3 +39,15 @@ These directories exist but are typically NOT part of the computing workspace co
 - To work on VS Code sync: `cd vscode`
 - To work on Raycast scripts: `cd raycast`
 - To work on homelab/infrastructure: `cd homelab`
+
+## Presentations Workspace
+
+A separate workspace exists for presentations at `~/code/presentations`:
+
+- **Workspace file**: `presentations.code-workspace` - Opens the presentations directory
+- **Tmux session**: Run `tmpres` to start a tmux session with:
+  - Window 0: zsh shell
+  - Window 1: Claude 
+  - Window 2: R console
+  - Window 3: Python console
+- **Script location**: `~/code/projects/tmux/start_presentations.sh`
