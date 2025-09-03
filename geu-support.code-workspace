@@ -1,7 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "../geu-support"
+			"path": "../geu-irr-support"
+		},
+		{
+			"path": "../geu-power"
 		}
 	],
 	"settings": {}
