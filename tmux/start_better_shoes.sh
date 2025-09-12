@@ -28,12 +28,16 @@ tmux send-keys -t $SESSION_NAME:3 "npm run dev" C-m
 tmux new-window -t $SESSION_NAME:4 -n tinker -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:4 "php artisan tinker" C-m
 
-# Create Log window for monitoring logs (index 5)
-tmux new-window -t $SESSION_NAME:5 -n logs -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:5 "tail -n 1000 -f storage/logs/laravel.log" C-m
+# Create Docker window (index 5)
+tmux new-window -t $SESSION_NAME:5 -n docker -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:5 "docker-compose up -d" C-m
 
-# Create Framework window (index 6)
-tmux new-window -t $SESSION_NAME:6 -n framework -c "$HOME/code/framework" /bin/zsh
+# Create Log window for monitoring logs (index 6)
+tmux new-window -t $SESSION_NAME:6 -n logs -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:6 "tail -n 1000 -f storage/logs/laravel.log" C-m
+
+# Create Framework window (index 7)
+tmux new-window -t $SESSION_NAME:7 -n framework -c "$HOME/code/framework" /bin/zsh
 
 # Re-select shell window and attach
 tmux select-window -t $SESSION_NAME:0

@@ -32,13 +32,6 @@ check_required_services() {
         all_running=false
     fi
     
-    if nc -z localhost 9000 >/dev/null 2>&1; then
-        echo "${GREEN}✓${NC} MinIO is running (port 9000)"
-    else
-        echo "${RED}✗${NC} MinIO is not running"
-        all_running=false
-    fi
-    
     if nc -z localhost 5555 >/dev/null 2>&1; then
         echo "${GREEN}✓${NC} Flower is running (port 5555)"
     else
