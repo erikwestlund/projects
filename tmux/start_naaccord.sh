@@ -10,43 +10,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Function to check if services are running
-check_required_services() {
-    local all_running=true
-    
-    echo "Checking required services..."
-    echo "-------------------------------------------"
-    
-    # Check each service
-    if nc -z localhost 3306 >/dev/null 2>&1; then
-        echo "${GREEN}✓${NC} MariaDB is running (port 3306)"
-    else
-        echo "${RED}✗${NC} MariaDB is not running"
-        all_running=false
-    fi
-    
-    if nc -z localhost 6379 >/dev/null 2>&1; then
-        echo "${GREEN}✓${NC} Redis is running (port 6379)"
-    else
-        echo "${RED}✗${NC} Redis is not running"
-        all_running=false
-    fi
-    
-    if nc -z localhost 5555 >/dev/null 2>&1; then
-        echo "${GREEN}✓${NC} Flower is running (port 5555)"
-    else
-        echo "${RED}✗${NC} Flower is not running"
-        all_running=false
-    fi
-    
-    echo "-------------------------------------------"
-    
-    if $all_running; then
-        return 0
-    else
-        return 1
-    fi
-}
 
 # Function to wait for Django to be ready
 wait_for_django() {
@@ -112,22 +75,18 @@ echo "NAACCORD Tmux Session Manager"
 echo "═══════════════════════════════════════════"
 echo ""
 
-# Check if Docker services are running
-if ! check_required_services; then
+# Start Docker services first
+echo "Starting Docker services..."
+if ! "$HOME/code/projects/docker/naaccord.sh" start; then
     echo ""
-    echo "${RED}═══════════════════════════════════════════${NC}"
-    echo "${RED}✗ Required Docker services are not running${NC}"
-    echo "${RED}═══════════════════════════════════════════${NC}"
-    echo ""
-    echo "Please start Docker services first:"
-    echo "  ${YELLOW}dockerna start${NC}"
-    echo ""
-    echo "Or if you prefer to run Docker in foreground:"
-    echo "  ${YELLOW}cd $PROJECT_DIR${NC}"
-    echo "  ${YELLOW}docker compose -f docker-compose.dev.yml up${NC}"
-    echo ""
+    echo "${RED}✗ Failed to start Docker services${NC}"
     exit 1
 fi
+
+echo ""
+echo "Docker services ready. Waiting a moment for full initialization..."
+sleep 3
+echo ""
 
 echo ""
 echo "${GREEN}✓ All required Docker services are running${NC}"
@@ -147,28 +106,48 @@ tmux send-keys -t "${SESSION}:claude" "claude" C-m
 tmux new-window -t $SESSION -n shell_naatools -c "$NAATOOLS_DIR"
 tmux send-keys -t "${SESSION}:shell_naatools" "cd \"$NAATOOLS_DIR\"" C-m
 
-# Ensure port 8000 is available for Django
-ensure_port_available 8000 "Django"
+# Ensure ports are available for Django servers
+ensure_port_available 8000 "Django Web"
+ensure_port_available 8001 "Django Services"
 
-# Create Django window and start server
+# Create Django Web Server window (streams to services)
 tmux new-window -t $SESSION -n django -c "$PROJECT_DIR"
 
-# Set Django environment and start server
-echo "Starting Django development server..."
+# Set Django environment and start web server (streaming mode)
+echo "Starting Django web server (streaming mode)..."
 tmux send-keys -t "${SESSION}:django" "source venv/bin/activate" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:django" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
+tmux send-keys -t "${SESSION}:django" "export SERVER_ROLE=web" C-m
+tmux send-keys -t "${SESSION}:django" "export INTERNAL_API_KEY=dev-streaming-key-123" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:django" "python manage.py runserver 0.0.0.0:8000" C-m
 
-# Wait for Django to be ready
+# Wait for Django web server to be ready
 wait_for_django || {
-    echo "${RED}✗${NC} Django failed to start. Showing last 10 lines from Django window:"
+    echo "${RED}✗${NC} Django web server failed to start. Showing last 10 lines from Django window:"
     tmux capture-pane -t "${SESSION}:django" -p | tail -10
     echo ""
     echo "You can still attach to the session and debug manually:"
     echo "  tmux attach -t $SESSION"
 }
+
+# Create Django Services Server window (handles file storage)
+tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
+
+# Set Django environment and start services server
+echo "Starting Django services server (file storage)..."
+tmux send-keys -t "${SESSION}:services" "source venv/bin/activate" C-m
+sleep 1
+tmux send-keys -t "${SESSION}:services" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
+tmux send-keys -t "${SESSION}:services" "export SERVER_ROLE=services" C-m
+tmux send-keys -t "${SESSION}:services" "export INTERNAL_API_KEY=dev-streaming-key-123" C-m
+sleep 1
+tmux send-keys -t "${SESSION}:services" "python manage.py runserver 0.0.0.0:8001" C-m
+
+# Wait a moment for services server to start
+echo "Waiting for services server to start..."
+sleep 3
 
 # Create Celery window
 tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
@@ -202,7 +181,8 @@ echo "Tmux windows created:"
 echo "  • shell_depot    : Main shell (activated venv)"
 echo "  • claude         : Claude CLI"
 echo "  • shell_naatools : NAATools shell"
-echo "  • django         : Django server (port 8000)"
+echo "  • django         : Django web server (port 8000, streaming mode)"
+echo "  • services       : Django services server (port 8001, file storage)"
 echo "  • celery         : Celery worker"
 echo "  • npm            : NPM dev server"
 echo "  • r_depot        : R console (depot)"

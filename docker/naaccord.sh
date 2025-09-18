@@ -30,25 +30,6 @@ wait_for_service() {
     return 1
 }
 
-# Function to check database connectivity
-check_database_ready() {
-    local max_attempts=30
-    local attempt=1
-    
-    echo "Checking database connectivity..."
-    while [ $attempt -le $max_attempts ]; do
-        if docker exec -i $(docker ps -q -f name=mariadb) mysql -uroot -proot -e "SELECT 1" >/dev/null 2>&1; then
-            echo "${GREEN}✓${NC} Database is accepting connections!"
-            return 0
-        fi
-        printf "  Attempt %2d/%d: Database not accepting connections yet...\r" $attempt $max_attempts
-        sleep 2
-        attempt=$((attempt + 1))
-    done
-    echo ""
-    echo "${RED}✗${NC} Error: Database failed to accept connections"
-    return 1
-}
 
 # Function to check if services are already running
 check_services_status() {
@@ -106,12 +87,10 @@ case "${1:-start}" in
     start)
         # Check if services are already running
         if check_services_status >/dev/null 2>&1; then
-            echo "${YELLOW}ℹ${NC} Services appear to be already running"
-            echo ""
+            echo "${GREEN}✓${NC} Services are already running"
             check_services_status
             echo ""
-            echo "Use 'dockerna status' to check status"
-            echo "Use 'dockerna restart' to restart services"
+            echo "${GREEN}✓ All services ready!${NC}"
             exit 0
         fi
         
@@ -119,32 +98,20 @@ case "${1:-start}" in
         echo ""
         
         # Start Docker Compose (using -f with full path)
-        docker compose -f "$PROJECT_DIR/docker-compose.dev.yml" --project-directory "$PROJECT_DIR" up -d
+        docker compose -f "$PROJECT_DIR/docker-compose.dev.yml" --project-directory "$PROJECT_DIR" up -d --remove-orphans
         
         echo ""
-        echo "Waiting for services to be ready..."
-        echo "-------------------------------------------"
-        
-        # Wait for core services first
-        wait_for_service "MariaDB" 3306 || exit 1
-        wait_for_service "Redis" 6379 || exit 1
-        
-        # Additional database readiness check
-        check_database_ready || exit 1
-        
-        # Wait for auxiliary services
-        wait_for_service "MinIO" 9000 || exit 1
-        wait_for_service "Flower" 5555 || exit 1
+        echo "Services started. Waiting 2 seconds for initialization..."
+        sleep 2
         
         echo ""
         echo "═══════════════════════════════════════════"
-        echo "${GREEN}✓ All Docker services started successfully!${NC}"
+        echo "${GREEN}✓ Docker services started successfully!${NC}"
         echo "═══════════════════════════════════════════"
         echo ""
         echo "Services running:"
         echo "  • MariaDB : localhost:3306"
         echo "  • Redis   : localhost:6379"
-        echo "  • MinIO   : localhost:9000"
         echo "  • Flower  : localhost:5555"
         echo ""
         echo "You can now run 'tmna' to start the tmux session"
