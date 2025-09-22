@@ -119,7 +119,8 @@ tmux send-keys -t "${SESSION}:django" "source venv/bin/activate" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:django" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
 tmux send-keys -t "${SESSION}:django" "export SERVER_ROLE=web" C-m
-tmux send-keys -t "${SESSION}:django" "export INTERNAL_API_KEY=dev-streaming-key-123" C-m
+tmux send-keys -t "${SESSION}:django" "export INTERNAL_API_KEY=test-key-123" C-m
+tmux send-keys -t "${SESSION}:django" "export SERVICES_URL=http://localhost:8001" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:django" "python manage.py runserver 0.0.0.0:8000" C-m
 
@@ -141,7 +142,7 @@ tmux send-keys -t "${SESSION}:services" "source venv/bin/activate" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:services" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
 tmux send-keys -t "${SESSION}:services" "export SERVER_ROLE=services" C-m
-tmux send-keys -t "${SESSION}:services" "export INTERNAL_API_KEY=dev-streaming-key-123" C-m
+tmux send-keys -t "${SESSION}:services" "export INTERNAL_API_KEY=test-key-123" C-m
 sleep 1
 tmux send-keys -t "${SESSION}:services" "python manage.py runserver 0.0.0.0:8001" C-m
 
