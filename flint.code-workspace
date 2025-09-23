@@ -1,0 +1,49 @@
+{
+  "folders": [
+    {
+      "path": "../flint",
+      "name": "Flint (Main)"
+    },
+    {
+      "path": "../flint-init",
+      "name": "Flint Init (Reference)"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[php]": {
+      "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    "[blade]": {
+      "editor.defaultFormatter": "onecentlin.laravel-blade"
+    },
+    "files.associations": {
+      "*.antlers.html": "html",
+      "*.blade.php": "blade"
+    },
+    "emmet.includeLanguages": {
+      "blade": "html",
+      "antlers": "html"
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/vendor": true,
+      "**/storage/framework": true,
+      "**/storage/logs": true,
+      "**/public/vendor": true,
+      "**/public/build": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "bmewburn.vscode-intelephense-client",
+      "onecentlin.laravel-blade",
+      "austenc.laravel-docs",
+      "amiralizadeh9480.laravel-extra-intellisense",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "statamic.statamic-support"
+    ]
+  }
+}
