@@ -10,6 +10,8 @@ tmux has-session -t $SESSION_NAME 2>/dev/null
 if [ $? != 0 ]; then
     # Create new session with first window for shell
     tmux new-session -d -s $SESSION_NAME -n "shell" -c "$HOME/code/parkukb" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:0 "claude" C-m
+    tmux send-keys -t $SESSION_NAME:0 "source venv/bin/activate" C-m
     
     # Create window for claude (window index 1)
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/parkukb" /bin/zsh
