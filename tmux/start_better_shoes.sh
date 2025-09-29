@@ -30,7 +30,7 @@ tmux send-keys -t $SESSION_NAME:4 "php artisan tinker" C-m
 
 # Create Docker window (index 5)
 tmux new-window -t $SESSION_NAME:5 -n docker -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:5 "docker-compose up -d" C-m
+tmux send-keys -t $SESSION_NAME:5 "$HOME/code/projects/docker/better-shoes.sh start" C-m
 
 # Create Log window for monitoring logs (index 6)
 tmux new-window -t $SESSION_NAME:6 -n logs -c "$PROJECT_DIR" /bin/zsh

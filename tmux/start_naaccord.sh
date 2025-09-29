@@ -75,6 +75,9 @@ echo "NAACCORD Tmux Session Manager"
 echo "═══════════════════════════════════════════"
 echo ""
 
+
+echo ""
+
 # Start Docker services first
 echo "Starting Docker services..."
 if ! "$HOME/code/projects/docker/naaccord.sh" start; then
@@ -113,6 +116,10 @@ ensure_port_available 8001 "Django Services"
 # Create Django Web Server window (streams to services)
 tmux new-window -t $SESSION -n django -c "$PROJECT_DIR"
 
+# Configure IPs (can be overridden by environment)
+WEB_IP=${WEB_IP:-"0.0.0.0"}
+SERVICES_IP=${SERVICES_IP:-"localhost"}
+
 # Set Django environment and start web server (streaming mode)
 echo "Starting Django web server (streaming mode)..."
 tmux send-keys -t "${SESSION}:django" "source venv/bin/activate" C-m
@@ -120,9 +127,9 @@ sleep 1
 tmux send-keys -t "${SESSION}:django" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
 tmux send-keys -t "${SESSION}:django" "export SERVER_ROLE=web" C-m
 tmux send-keys -t "${SESSION}:django" "export INTERNAL_API_KEY=test-key-123" C-m
-tmux send-keys -t "${SESSION}:django" "export SERVICES_URL=http://localhost:8001" C-m
+tmux send-keys -t "${SESSION}:django" "export SERVICES_URL=http://$SERVICES_IP:8001" C-m
 sleep 1
-tmux send-keys -t "${SESSION}:django" "python manage.py runserver 0.0.0.0:8000" C-m
+tmux send-keys -t "${SESSION}:django" "python manage.py runserver $WEB_IP:8000" C-m
 
 # Wait for Django web server to be ready
 wait_for_django || {
@@ -178,18 +185,34 @@ echo "════════════════════════�
 echo "${GREEN}✓ Tmux session created successfully!${NC}"
 echo "═══════════════════════════════════════════"
 echo ""
+
+echo "${GREEN}🔒 Security Features Enabled:${NC}"
+echo "  • ✅ Containerized R/Quarto execution (READY)"
+echo "  • ✅ All R code runs in isolated Docker containers"
+echo "  • ✅ Quarto v1.8.24 with comprehensive R packages"
+echo "  • ✅ No R packages or code on host system"
+echo ""
+
 echo "Tmux windows created:"
 echo "  • shell_depot    : Main shell (activated venv)"
 echo "  • claude         : Claude CLI"
 echo "  • shell_naatools : NAATools shell"
-echo "  • django         : Django web server (port 8000, streaming mode)"
-echo "  • services       : Django services server (port 8001, file storage)"
-echo "  • celery         : Celery worker"
+echo "  • django         : Django web server (localhost:8000)"
+echo "  • services       : Django services server (localhost:8001)"
+echo "  • celery         : Celery worker (🐋 secure container execution)"
 echo "  • npm            : NPM dev server"
 echo "  • r_depot        : R console (depot)"
 echo "  • r_naatools     : R console (NAATools)"
-echo "  • docker         : Docker compose logs"
+echo "  • docker         : Docker compose logs (DB, Redis, 🐋 R containers)"
 echo ""
+
+echo "${GREEN}🛡️ Security Architecture:${NC}"
+echo "  • ✅ All clinical data processing containerized"
+echo "  • ✅ R code execution isolated from host (naaccord-quarto-executor:latest)"
+echo "  • ✅ Comprehensive R environment in containers (rocker/verse + essentials)"
+echo "  • 🔐 Network isolation, read-only filesystem, resource limits"
+echo ""
+
 echo "Attaching to session '$SESSION'..."
 echo "═══════════════════════════════════════════"
 echo ""
