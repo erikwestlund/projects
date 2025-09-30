@@ -4,63 +4,44 @@ SESSION="na"
 PROJECT_DIR="$HOME/code/naaccord"
 NAATOOLS_DIR="$HOME/code/NAATools"
 
+# Parse command line arguments
+NAATOOLS_DEV=false
+for arg in "$@"; do
+    case $arg in
+        --naatools-dev)
+            NAATOOLS_DEV=true
+            shift
+            ;;
+    esac
+done
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-
-# Function to wait for Django to be ready
-wait_for_django() {
+# Function to wait for containers to be ready
+wait_for_containers() {
     local max_attempts=30
     local attempt=1
-    
-    echo "Waiting for Django to start..."
+
+    echo "Waiting for containers to be ready..."
     while [ $attempt -le $max_attempts ]; do
-        if nc -z localhost 8000 >/dev/null 2>&1; then
-            echo "${GREEN}✓${NC} Django is ready on port 8000!"
+        # Check if web container is ready
+        if nc -z localhost 8000 >/dev/null 2>&1 && nc -z localhost 8001 >/dev/null 2>&1; then
+            echo "${GREEN}✓${NC} Containers are ready (ports 8000, 8001)!"
             return 0
         fi
-        
-        # Check if Django crashed (look for error messages in the window)
-        if [ $attempt -gt 3 ]; then
-            if tmux capture-pane -t "${SESSION}:django" -p | grep -q "Error\|Traceback\|SyntaxError\|NameError\|ImportError"; then
-                echo ""
-                echo "${RED}✗${NC} Django crashed with an error!"
-                echo "  Check the django window for details"
-                return 1
-            fi
-        fi
-        
-        printf "  Attempt %2d/%d: Django not ready yet...\r" $attempt $max_attempts
+
+        printf "  Attempt %2d/%d: Containers not ready yet...\r" $attempt $max_attempts
         sleep 2
         attempt=$((attempt + 1))
     done
     echo ""
-    echo "${YELLOW}⚠${NC} Warning: Django may not have started properly"
-    echo "  Check the django window for errors"
+    echo "${YELLOW}⚠${NC} Warning: Containers may not have started properly"
+    echo "  Check the docker window for errors"
     return 1
-}
-
-# Function to check and clear port if needed
-ensure_port_available() {
-    local port=$1
-    local service=$2
-    
-    if lsof -i :$port >/dev/null 2>&1; then
-        echo "${YELLOW}⚠${NC} Port $port is in use. Attempting to clear it..."
-        lsof -ti :$port | xargs kill -9 2>/dev/null
-        sleep 1
-        if lsof -i :$port >/dev/null 2>&1; then
-            echo "${RED}✗${NC} Failed to clear port $port"
-            return 1
-        else
-            echo "${GREEN}✓${NC} Port $port cleared successfully"
-            return 0
-        fi
-    fi
-    return 0
 }
 
 # Check if session already exists
@@ -72,18 +53,33 @@ fi
 
 echo "═══════════════════════════════════════════"
 echo "NAACCORD Tmux Session Manager"
+if [ "$NAATOOLS_DEV" = true ]; then
+    echo "NAATools Dev Mode: ENABLED"
+fi
 echo "═══════════════════════════════════════════"
 echo ""
 
-
-echo ""
+if [ "$NAATOOLS_DEV" = true ]; then
+    echo "${YELLOW}⚡ Local NAATools will be mounted from:${NC}"
+    echo "  $NAATOOLS_DIR"
+    echo ""
+fi
 
 # Start Docker services first
 echo "Starting Docker services..."
-if ! "$HOME/code/projects/docker/naaccord.sh" start; then
-    echo ""
-    echo "${RED}✗ Failed to start Docker services${NC}"
-    exit 1
+cd "$PROJECT_DIR"
+if [ "$NAATOOLS_DEV" = true ]; then
+    if ! "$PROJECT_DIR/scripts/naaccord-docker.sh" start --env dev --naatools-dev; then
+        echo ""
+        echo "${RED}✗ Failed to start Docker services${NC}"
+        exit 1
+    fi
+else
+    if ! "$PROJECT_DIR/scripts/naaccord-docker.sh" start --env dev; then
+        echo ""
+        echo "${RED}✗ Failed to start Docker services${NC}"
+        exit 1
+    fi
 fi
 
 echo ""
@@ -91,93 +87,57 @@ echo "Docker services ready. Waiting a moment for full initialization..."
 sleep 3
 echo ""
 
+# Wait for containers to be ready
+wait_for_containers || {
+    echo "${RED}✗${NC} Containers failed to start properly. You can still attach to the session and debug manually:"
+    echo "  tmux attach -t $SESSION"
+}
+
 echo ""
 echo "${GREEN}✓ All required Docker services are running${NC}"
 echo ""
 echo "Creating tmux session..."
 echo ""
 
-# Start tmux with shell window (this becomes window 0)
-tmux new-session -d -s $SESSION -n shell_depot -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:shell_depot" "source venv/bin/activate" C-m
+# Start tmux with zsh window (window 0)
+tmux new-session -d -s $SESSION -n zsh -c "$PROJECT_DIR"
 
-# Create Claude window
+# Create Claude window (window 1)
 tmux new-window -t $SESSION -n claude -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:claude" "claude" C-m
 
-# Create NAATools shell window
-tmux new-window -t $SESSION -n shell_naatools -c "$NAATOOLS_DIR"
-tmux send-keys -t "${SESSION}:shell_naatools" "cd \"$NAATOOLS_DIR\"" C-m
+# Create Web container access window (window 2)
+tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:web" "# Web container access - Django logs and shell access" C-m
+tmux send-keys -t "${SESSION}:web" "while true; do docker logs -f naaccord-test-web 2>/dev/null || sleep 2; done" C-m
 
-# Ensure ports are available for Django servers
-ensure_port_available 8000 "Django Web"
-ensure_port_available 8001 "Django Services"
-
-# Create Django Web Server window (streams to services)
-tmux new-window -t $SESSION -n django -c "$PROJECT_DIR"
-
-# Configure IPs (can be overridden by environment)
-WEB_IP=${WEB_IP:-"0.0.0.0"}
-SERVICES_IP=${SERVICES_IP:-"localhost"}
-
-# Set Django environment and start web server (streaming mode)
-echo "Starting Django web server (streaming mode)..."
-tmux send-keys -t "${SESSION}:django" "source venv/bin/activate" C-m
-sleep 1
-tmux send-keys -t "${SESSION}:django" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
-tmux send-keys -t "${SESSION}:django" "export SERVER_ROLE=web" C-m
-tmux send-keys -t "${SESSION}:django" "export INTERNAL_API_KEY=test-key-123" C-m
-tmux send-keys -t "${SESSION}:django" "export SERVICES_URL=http://$SERVICES_IP:8001" C-m
-sleep 1
-tmux send-keys -t "${SESSION}:django" "python manage.py runserver $WEB_IP:8000" C-m
-
-# Wait for Django web server to be ready
-wait_for_django || {
-    echo "${RED}✗${NC} Django web server failed to start. Showing last 10 lines from Django window:"
-    tmux capture-pane -t "${SESSION}:django" -p | tail -10
-    echo ""
-    echo "You can still attach to the session and debug manually:"
-    echo "  tmux attach -t $SESSION"
-}
-
-# Create Django Services Server window (handles file storage)
+# Create Services container access window (window 3)
 tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:services" "# Services container access - Django logs and shell access" C-m
+tmux send-keys -t "${SESSION}:services" "while true; do docker logs -f naaccord-test-services 2>/dev/null || sleep 2; done" C-m
 
-# Set Django environment and start services server
-echo "Starting Django services server (file storage)..."
-tmux send-keys -t "${SESSION}:services" "source venv/bin/activate" C-m
-sleep 1
-tmux send-keys -t "${SESSION}:services" "export DJANGO_SETTINGS_MODULE=depot.settings" C-m
-tmux send-keys -t "${SESSION}:services" "export SERVER_ROLE=services" C-m
-tmux send-keys -t "${SESSION}:services" "export INTERNAL_API_KEY=test-key-123" C-m
-sleep 1
-tmux send-keys -t "${SESSION}:services" "python manage.py runserver 0.0.0.0:8001" C-m
+# Create window 4 (placeholder - will become window 4)
+tmux new-window -t $SESSION -n placeholder -c "$PROJECT_DIR"
 
-# Wait a moment for services server to start
-echo "Waiting for services server to start..."
-sleep 3
-
-# Create Celery window
+# Create Celery monitoring window (window 5)
 tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:celery" "source venv/bin/activate && celery -A depot worker -l info" C-m
+tmux send-keys -t "${SESSION}:celery" "# Celery worker monitoring and Flower dashboard" C-m
+tmux send-keys -t "${SESSION}:celery" "echo 'Celery worker logs:'" C-m
+tmux send-keys -t "${SESSION}:celery" "while true; do docker logs -f naaccord-test-celery 2>/dev/null || sleep 2; done" C-m
 
-# Create NPM window
+# Create NPM window (window 6)
 tmux new-window -t $SESSION -n npm -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:npm" "npm run dev" C-m
 
-# Create R windows
-tmux new-window -t $SESSION -n r_depot -c "$PROJECT_DIR/depot"
-tmux send-keys -t "${SESSION}:r_depot" "cd \"$PROJECT_DIR/depot\" && R" C-m
-
-tmux new-window -t $SESSION -n r_naatools -c "$NAATOOLS_DIR"
-tmux send-keys -t "${SESSION}:r_naatools" "cd \"$NAATOOLS_DIR\" && R" C-m
-
-# Create Docker monitoring window (optional - shows docker compose logs)
+# Create Docker monitoring window (window 7)
 tmux new-window -t $SESSION -n docker -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:docker" "docker compose -f docker-compose.dev.yml logs -f" C-m
+tmux send-keys -t "${SESSION}:docker" "while true; do docker compose logs -f 2>/dev/null || sleep 2; done" C-m
 
-# Re-select shell window
-tmux select-window -t "${SESSION}:shell_depot"
+# Kill the placeholder window to clean up numbering
+tmux kill-window -t "${SESSION}:placeholder"
+
+# Re-select zsh window (window 0)
+tmux select-window -t "${SESSION}:zsh"
 
 # Print success summary
 echo ""
@@ -186,31 +146,37 @@ echo "${GREEN}✓ Tmux session created successfully!${NC}"
 echo "═══════════════════════════════════════════"
 echo ""
 
-echo "${GREEN}🔒 Security Features Enabled:${NC}"
-echo "  • ✅ Containerized R/Quarto execution (READY)"
-echo "  • ✅ All R code runs in isolated Docker containers"
-echo "  • ✅ Quarto v1.8.24 with comprehensive R packages"
-echo "  • ✅ No R packages or code on host system"
+echo "${GREEN}🐋 Containerized Development Environment:${NC}"
+echo "  • ✅ All services running in Docker containers"
+echo "  • ✅ Auto-reload enabled for code changes"
+echo "  • ✅ PHI-compliant two-server architecture"
+echo "  • ✅ Celery worker with Flower monitoring"
+if [ "$NAATOOLS_DEV" = true ]; then
+    echo "  • ${YELLOW}⚡ NAATools Dev Mode: Local changes reflected immediately${NC}"
+fi
 echo ""
 
 echo "Tmux windows created:"
-echo "  • shell_depot    : Main shell (activated venv)"
-echo "  • claude         : Claude CLI"
-echo "  • shell_naatools : NAATools shell"
-echo "  • django         : Django web server (localhost:8000)"
-echo "  • services       : Django services server (localhost:8001)"
-echo "  • celery         : Celery worker (🐋 secure container execution)"
-echo "  • npm            : NPM dev server"
-echo "  • r_depot        : R console (depot)"
-echo "  • r_naatools     : R console (NAATools)"
-echo "  • docker         : Docker compose logs (DB, Redis, 🐋 R containers)"
+echo "  • 0: zsh          : Main shell (~/code/naaccord)"
+echo "  • 1: claude       : Claude CLI"
+echo "  • 2: web          : Web container logs (port 8000)"
+echo "  • 3: services     : Services container logs (port 8001)"
+echo "  • 5: celery       : Celery worker logs and monitoring"
+echo "  • 6: npm          : NPM dev server (port 3000)"
+echo "  • 7: docker       : Docker compose logs (all containers)"
 echo ""
 
-echo "${GREEN}🛡️ Security Architecture:${NC}"
-echo "  • ✅ All clinical data processing containerized"
-echo "  • ✅ R code execution isolated from host (naaccord-quarto-executor:latest)"
-echo "  • ✅ Comprehensive R environment in containers (rocker/verse + essentials)"
-echo "  • 🔐 Network isolation, read-only filesystem, resource limits"
+echo "${GREEN}🔗 Service URLs:${NC}"
+echo "  • Web Interface: http://localhost:8000"
+echo "  • Services API: http://localhost:8001"
+echo "  • Flower (Celery): http://localhost:5555"
+echo "  • Vite Dev Server: http://localhost:3000"
+echo ""
+
+echo "${GREEN}🛠️ Container Access:${NC}"
+echo "  • Web shell: docker exec -it naaccord-test-web bash"
+echo "  • Services shell: docker exec -it naaccord-test-services bash"
+echo "  • Django shell: docker exec -it naaccord-test-web python manage.py shell"
 echo ""
 
 echo "Attaching to session '$SESSION'..."
