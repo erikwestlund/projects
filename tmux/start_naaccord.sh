@@ -109,12 +109,12 @@ tmux send-keys -t "${SESSION}:claude" "claude" C-m
 # Create Web container access window (window 2)
 tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:web" "# Web container access - Django logs and shell access" C-m
-tmux send-keys -t "${SESSION}:web" "while true; do docker logs -f naaccord-test-web 2>/dev/null || sleep 2; done" C-m
+tmux send-keys -t "${SESSION}:web" 'command docker logs -f --tail 50 naaccord-test-web 2>&1' C-m
 
 # Create Services container access window (window 3)
 tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:services" "# Services container access - Django logs and shell access" C-m
-tmux send-keys -t "${SESSION}:services" "while true; do docker logs -f naaccord-test-services 2>/dev/null || sleep 2; done" C-m
+tmux send-keys -t "${SESSION}:services" 'command docker logs -f --tail 50 naaccord-test-services 2>&1' C-m
 
 # Create window 4 (placeholder - will become window 4)
 tmux new-window -t $SESSION -n placeholder -c "$PROJECT_DIR"
@@ -123,7 +123,7 @@ tmux new-window -t $SESSION -n placeholder -c "$PROJECT_DIR"
 tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:celery" "# Celery worker monitoring and Flower dashboard" C-m
 tmux send-keys -t "${SESSION}:celery" "echo 'Celery worker logs:'" C-m
-tmux send-keys -t "${SESSION}:celery" "while true; do docker logs -f naaccord-test-celery 2>/dev/null || sleep 2; done" C-m
+tmux send-keys -t "${SESSION}:celery" 'command docker logs -f --tail 50 naaccord-test-celery 2>&1' C-m
 
 # Create NPM window (window 6)
 tmux new-window -t $SESSION -n npm -c "$PROJECT_DIR"
@@ -131,7 +131,7 @@ tmux send-keys -t "${SESSION}:npm" "npm run dev" C-m
 
 # Create Docker monitoring window (window 7)
 tmux new-window -t $SESSION -n docker -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:docker" "while true; do docker compose logs -f 2>/dev/null || sleep 2; done" C-m
+tmux send-keys -t "${SESSION}:docker" 'command docker compose logs -f --tail 50 2>&1' C-m
 
 # Kill the placeholder window to clean up numbering
 tmux kill-window -t "${SESSION}:placeholder"
