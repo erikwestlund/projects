@@ -24,6 +24,10 @@ tmux send-keys -t $SESSION_NAME:2 "php artisan tinker" C-m
 tmux new-window -t $SESSION_NAME:3 -n horizon -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:3 "php artisan horizon" C-m
 
+# Create NPM window (index 4)
+tmux new-window -t $SESSION_NAME:4 -n npm -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:4 "npm run dev" C-m
+
 # Re-select shell window and attach
 tmux select-window -t $SESSION_NAME:0
 tmux attach-session -t $SESSION_NAME
