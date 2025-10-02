@@ -1,10 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "better-shoes"
+			"name": "better-shoes",
+			"path": "../better-shoes"
 		},
 		{
-			"path": "framework"
+			"name": "framework",
+			"path": "../framework"
 		}
 	],
 	"settings": {}

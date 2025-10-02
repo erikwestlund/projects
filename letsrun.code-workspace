@@ -1,10 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "letsrun"
+			"name": "letsrun",
+			"path": "../letsrun"
 		},
 		{
-			"path": "forge"
+			"name": "forge",
+			"path": "../forge"
 		}
 	],
 	"settings": {}

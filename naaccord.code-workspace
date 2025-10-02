@@ -1,13 +1,16 @@
 {
 	"folders": [
 		{
-			"path": "naaccord"
+			"name": "naaccord",
+			"path": "../naaccord"
 		},
 		{
-			"path": "NAATools"
+			"name": "NAATools",
+			"path": "../NAATools"
 		},
 		{
-			"path": "naaccord-datalib"
+			"name": "naaccord-datalib",
+			"path": "../naaccord-datalib"
 		}
 	],
 	"settings": {}

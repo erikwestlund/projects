@@ -1,16 +1,20 @@
 {
 	"folders": [
 		{
-			"path": "jh-sidr-pipeline"
+			"name": "jh-sidr-pipeline",
+			"path": "../jh-sidr-pipeline"
 		},
 		{
-			"path": "jh-sidr-data"
+			"name": "jh-sidr-data",
+			"path": "../jh-sidr-data"
 		},
 		{
-			"path": "jh-sidr-data-restricted"
+			"name": "jh-sidr-data-restricted",
+			"path": "../jh-sidr-data-restricted"
 		},
 		{
-			"path": "jh-sidr-tools"
+			"name": "jh-sidr-tools",
+			"path": "../jh-sidr-tools"
 		}
 	],
 	"settings": {}
