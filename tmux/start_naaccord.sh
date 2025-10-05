@@ -106,30 +106,34 @@ tmux new-session -d -s $SESSION -n zsh -c "$PROJECT_DIR"
 tmux new-window -t $SESSION -n claude -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:claude" "claude" C-m
 
-# Create Web container access window (window 2)
+# Create Codex window (window 2)
+tmux new-window -t $SESSION -n codex -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:codex" "codex" C-m
+
+# Create Web container access window (window 3)
 tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:web" "# Web container access - Django logs and shell access" C-m
 tmux send-keys -t "${SESSION}:web" 'command docker logs -f --tail 50 naaccord-test-web 2>&1' C-m
 
-# Create Services container access window (window 3)
+# Create Services container access window (window 4)
 tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:services" "# Services container access - Django logs and shell access" C-m
 tmux send-keys -t "${SESSION}:services" 'command docker logs -f --tail 50 naaccord-test-services 2>&1' C-m
 
-# Create window 4 (placeholder - will become window 4)
+# Create window 5 (placeholder - will become window 5)
 tmux new-window -t $SESSION -n placeholder -c "$PROJECT_DIR"
 
-# Create Celery monitoring window (window 5)
+# Create Celery monitoring window (window 6)
 tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:celery" "# Celery worker monitoring and Flower dashboard" C-m
 tmux send-keys -t "${SESSION}:celery" "echo 'Celery worker logs:'" C-m
 tmux send-keys -t "${SESSION}:celery" 'command docker logs -f --tail 50 naaccord-test-celery 2>&1' C-m
 
-# Create NPM window (window 6)
+# Create NPM window (window 7)
 tmux new-window -t $SESSION -n npm -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:npm" "npm run dev" C-m
 
-# Create Docker monitoring window (window 7)
+# Create Docker monitoring window (window 8)
 tmux new-window -t $SESSION -n docker -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:docker" 'command docker compose logs -f --tail 50 2>&1' C-m
 
@@ -159,11 +163,12 @@ echo ""
 echo "Tmux windows created:"
 echo "  • 0: zsh          : Main shell (~/code/naaccord)"
 echo "  • 1: claude       : Claude CLI"
-echo "  • 2: web          : Web container logs (port 8000)"
-echo "  • 3: services     : Services container logs (port 8001)"
-echo "  • 5: celery       : Celery worker logs and monitoring"
-echo "  • 6: npm          : NPM dev server (port 3000)"
-echo "  • 7: docker       : Docker compose logs (all containers)"
+echo "  • 2: codex        : Codex CLI"
+echo "  • 3: web          : Web container logs (port 8000)"
+echo "  • 4: services     : Services container logs (port 8001)"
+echo "  • 6: celery       : Celery worker logs and monitoring"
+echo "  • 7: npm          : NPM dev server (port 3000)"
+echo "  • 8: docker       : Docker compose logs (all containers)"
 echo ""
 
 echo "${GREEN}🔗 Service URLs:${NC}"
