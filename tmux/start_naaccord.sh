@@ -4,6 +4,9 @@ SESSION="na"
 PROJECT_DIR="$HOME/code/naaccord"
 NAATOOLS_DIR="$HOME/code/NAATools"
 
+# IDE Configuration
+IDE_COMMAND="pycharm"
+
 # Parse command line arguments
 NAATOOLS_DEV=false
 for arg in "$@"; do
@@ -139,6 +142,13 @@ tmux send-keys -t "${SESSION}:docker" 'command docker compose logs -f --tail 50 
 
 # Kill the placeholder window to clean up numbering
 tmux kill-window -t "${SESSION}:placeholder"
+
+# Create IDE window (window 9)
+tmux new-window -t $SESSION -n ide -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:ide" "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+tmux send-keys -t "${SESSION}:ide" "echo 'Project: $PROJECT_DIR'" C-m
+tmux send-keys -t "${SESSION}:ide" "echo ''" C-m
+tmux send-keys -t "${SESSION}:ide" "echo 'Run: $IDE_COMMAND .'" C-m
 
 # Re-select zsh window (window 0)
 tmux select-window -t "${SESSION}:zsh"

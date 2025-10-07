@@ -5,6 +5,9 @@
 SESSION_NAME="flint"
 PROJECT_DIR="$HOME/code/flint"
 
+# IDE Configuration
+IDE_COMMAND="phpstorm"
+
 # Check if session already exists
 tmux has-session -t $SESSION_NAME 2>/dev/null
 
@@ -19,6 +22,13 @@ if [ $? != 0 ]; then
     # Create window for tinker (window index 2)
     tmux new-window -t $SESSION_NAME:2 -n "tinker" -c "$PROJECT_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:2 "php artisan tinker" C-m
+
+    # Create IDE window (index 3)
+    tmux new-window -t $SESSION_NAME:3 -n "ide" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+    tmux send-keys -t $SESSION_NAME:3 "echo 'Project: $PROJECT_DIR'" C-m
+    tmux send-keys -t $SESSION_NAME:3 "echo ''" C-m
+    tmux send-keys -t $SESSION_NAME:3 "echo 'Run: $IDE_COMMAND .'" C-m
 
     # Go back to zsh window (window index 0)
     tmux select-window -t $SESSION_NAME:0

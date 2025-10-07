@@ -3,6 +3,10 @@
 # Start SIDR workspace tmux session
 
 SESSION_NAME="sidr"
+PROJECT_DIR="$HOME/code/jh-sidr-pipeline"
+
+# IDE Configuration
+IDE_COMMAND="code"
 
 # Check if session already exists
 tmux has-session -t $SESSION_NAME 2>/dev/null
@@ -31,10 +35,17 @@ if [ $? != 0 ]; then
     # Create a window for R console in example project
     tmux new-window -t $SESSION_NAME:7 -n "example-R" -c "$HOME/code/sidr-example-project" /bin/zsh
     tmux send-keys -t $SESSION_NAME:7 "R" C-m
-    
+
+    # Create IDE window (index 8)
+    tmux new-window -t $SESSION_NAME:8 -n "ide" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:8 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+    tmux send-keys -t $SESSION_NAME:8 "echo 'Project: $PROJECT_DIR'" C-m
+    tmux send-keys -t $SESSION_NAME:8 "echo ''" C-m
+    tmux send-keys -t $SESSION_NAME:8 "echo 'Run: $IDE_COMMAND .'" C-m
+
     # Activate virtual environment in the pipeline window
     tmux send-keys -t $SESSION_NAME:0 "source venv/bin/activate" C-m
-    
+
     # Select the first window
     tmux select-window -t $SESSION_NAME:0
 fi

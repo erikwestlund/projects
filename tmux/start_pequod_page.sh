@@ -5,6 +5,9 @@
 SESSION_NAME="pequod-page"
 PROJECT_DIR="$HOME/code/pequod.page"
 
+# IDE Configuration
+IDE_COMMAND="phpstorm"
+
 # Kill existing session if it exists and wait for cleanup
 tmux kill-session -t $SESSION_NAME 2>/dev/null
 sleep 0.5
@@ -31,6 +34,13 @@ tmux send-keys -t $SESSION_NAME:4 "php artisan horizon" C-m
 # Create NPM window (index 5)
 tmux new-window -t $SESSION_NAME:5 -n npm -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:5 "npm run dev" C-m
+
+# Create IDE window (index 6)
+tmux new-window -t $SESSION_NAME:6 -n ide -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:6 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+tmux send-keys -t $SESSION_NAME:6 "echo 'Project: $PROJECT_DIR'" C-m
+tmux send-keys -t $SESSION_NAME:6 "echo ''" C-m
+tmux send-keys -t $SESSION_NAME:6 "echo 'Run: $IDE_COMMAND .'" C-m
 
 # Re-select shell window and attach
 tmux select-window -t $SESSION_NAME:0

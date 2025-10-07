@@ -3,6 +3,10 @@
 # Start homelab infrastructure tmux session
 
 SESSION_NAME="homelab"
+PROJECT_DIR="$HOME/code/homelab"
+
+# IDE Configuration
+IDE_COMMAND="code"
 
 # Check if session already exists
 tmux has-session -t $SESSION_NAME 2>/dev/null
@@ -20,7 +24,14 @@ if [ $? != 0 ]; then
     
     # Create fourth window (3) named "home-assistant" in home-assistant directory
     tmux new-window -t $SESSION_NAME:3 -n "home-assistant" -c "$HOME/code/home-assistant" /bin/zsh
-    
+
+    # Create IDE window (index 4)
+    tmux new-window -t $SESSION_NAME:4 -n "ide" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+    tmux send-keys -t $SESSION_NAME:4 "echo 'Project: $PROJECT_DIR'" C-m
+    tmux send-keys -t $SESSION_NAME:4 "echo ''" C-m
+    tmux send-keys -t $SESSION_NAME:4 "echo 'Run: $IDE_COMMAND .'" C-m
+
     # Select first window
     tmux select-window -t $SESSION_NAME:0
 fi

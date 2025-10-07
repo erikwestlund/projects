@@ -5,6 +5,10 @@
 SESSION_NAME="bs"
 PROJECT_DIR="$HOME/code/better-shoes"
 
+# IDE Configuration - Set your preferred IDE command
+# Options: "cursor", "code", "phpstorm", "webstorm", "positron", etc.
+IDE_COMMAND="phpstorm"  # Change this to your preferred IDE
+
 # Kill existing session if it exists and wait for cleanup
 tmux kill-session -t $SESSION_NAME 2>/dev/null
 sleep 0.5
@@ -42,6 +46,15 @@ tmux send-keys -t $SESSION_NAME:7 "tail -n 1000 -f storage/logs/laravel.log" C-m
 
 # Create Framework window (index 8)
 tmux new-window -t $SESSION_NAME:8 -n framework -c "$HOME/code/framework" /bin/zsh
+
+# Create IDE window (index 9)
+# This window is for launching your preferred IDE
+# Note: The IDE will open in a separate window/app, not in tmux
+tmux new-window -t $SESSION_NAME:9 -n ide -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:9 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
+tmux send-keys -t $SESSION_NAME:9 "echo 'Project: $PROJECT_DIR'" C-m
+tmux send-keys -t $SESSION_NAME:9 "echo ''" C-m
+tmux send-keys -t $SESSION_NAME:9 "echo 'Run: $IDE_COMMAND .'" C-m
 
 # Re-select shell window and attach
 tmux select-window -t $SESSION_NAME:0
