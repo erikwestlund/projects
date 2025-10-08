@@ -4,9 +4,6 @@ SESSION="na"
 PROJECT_DIR="$HOME/code/naaccord"
 NAATOOLS_DIR="$HOME/code/NAATools"
 
-# IDE Configuration
-IDE_COMMAND="pycharm"
-
 # Parse command line arguments
 NAATOOLS_DEV=false
 for arg in "$@"; do
@@ -109,22 +106,23 @@ tmux new-session -d -s $SESSION -n zsh -c "$PROJECT_DIR"
 tmux new-window -t $SESSION -n claude -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:claude" "claude" C-m
 
-# Create Codex window (window 2)
+# Create Zai window (window 2)
+tmux new-window -t $SESSION -n zai -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:zai" "zai" C-m
+
+# Create Codex window (window 3)
 tmux new-window -t $SESSION -n codex -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:codex" "codex" C-m
 
-# Create Web container access window (window 3)
+# Create Web container access window (window 4)
 tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:web" "# Web container access - Django logs and shell access" C-m
 tmux send-keys -t "${SESSION}:web" 'command docker logs -f --tail 50 naaccord-test-web 2>&1' C-m
 
-# Create Services container access window (window 4)
+# Create Services container access window (window 5)
 tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:services" "# Services container access - Django logs and shell access" C-m
 tmux send-keys -t "${SESSION}:services" 'command docker logs -f --tail 50 naaccord-test-services 2>&1' C-m
-
-# Create window 5 (placeholder - will become window 5)
-tmux new-window -t $SESSION -n placeholder -c "$PROJECT_DIR"
 
 # Create Celery monitoring window (window 6)
 tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
@@ -139,16 +137,6 @@ tmux send-keys -t "${SESSION}:npm" "npm run dev" C-m
 # Create Docker monitoring window (window 8)
 tmux new-window -t $SESSION -n docker -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:docker" 'command docker compose logs -f --tail 50 2>&1' C-m
-
-# Kill the placeholder window to clean up numbering
-tmux kill-window -t "${SESSION}:placeholder"
-
-# Create IDE window (window 9)
-tmux new-window -t $SESSION -n ide -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:ide" "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
-tmux send-keys -t "${SESSION}:ide" "echo 'Project: $PROJECT_DIR'" C-m
-tmux send-keys -t "${SESSION}:ide" "echo ''" C-m
-tmux send-keys -t "${SESSION}:ide" "echo 'Run: $IDE_COMMAND .'" C-m
 
 # Re-select zsh window (window 0)
 tmux select-window -t "${SESSION}:zsh"
@@ -173,9 +161,10 @@ echo ""
 echo "Tmux windows created:"
 echo "  • 0: zsh          : Main shell (~/code/naaccord)"
 echo "  • 1: claude       : Claude CLI"
-echo "  • 2: codex        : Codex CLI"
-echo "  • 3: web          : Web container logs (port 8000)"
-echo "  • 4: services     : Services container logs (port 8001)"
+echo "  • 2: zai          : Zai CLI (Z.ai API)"
+echo "  • 3: codex        : Codex CLI"
+echo "  • 4: web          : Web container logs (port 8000)"
+echo "  • 5: services     : Services container logs (port 8001)"
 echo "  • 6: celery       : Celery worker logs and monitoring"
 echo "  • 7: npm          : NPM dev server (port 3000)"
 echo "  • 8: docker       : Docker compose logs (all containers)"

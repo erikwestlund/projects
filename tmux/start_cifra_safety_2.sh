@@ -5,9 +5,6 @@
 SESSION_NAME="cifras2"
 PROJECT_DIR="$HOME/code/cifra-safety-2"
 
-# IDE Configuration
-IDE_COMMAND="positron"
-
 # Kill any existing tmux session with the same name
 tmux kill-session -t $SESSION_NAME 2>/dev/null
 
@@ -18,16 +15,13 @@ tmux new-session -d -s $SESSION_NAME -n "zsh" -c "$PROJECT_DIR" /bin/zsh
 tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create R console window (window 2)
-tmux new-window -t $SESSION_NAME:2 -n "R" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "R" C-m
+# Create Zai window (window 2)
+tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "zai" C-m
 
-# Create IDE window (window 3)
-tmux new-window -t $SESSION_NAME:3 -n "ide" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:3 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
-tmux send-keys -t $SESSION_NAME:3 "echo 'Project: $PROJECT_DIR'" C-m
-tmux send-keys -t $SESSION_NAME:3 "echo ''" C-m
-tmux send-keys -t $SESSION_NAME:3 "echo 'Run: $IDE_COMMAND .'" C-m
+# Create R console window (window 3)
+tmux new-window -t $SESSION_NAME:3 -n "R" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:3 "R" C-m
 
 # Select the first window
 tmux select-window -t $SESSION_NAME:0

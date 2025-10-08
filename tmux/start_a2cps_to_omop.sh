@@ -1,9 +1,9 @@
 #!/bin/zsh
 
-# Start A2CPS EHR Data Quality tmux session
+# Start A2CPS to OMOP tmux session
 
-SESSION_NAME="a2cps"
-PROJECT_DIR="$HOME/code/a2cps-ehr-data-quality"
+SESSION_NAME="a2omop"
+PROJECT_DIR="$HOME/code/a2cps-to-omop"
 
 # Kill any existing tmux session with the same name
 tmux kill-session -t $SESSION_NAME 2>/dev/null

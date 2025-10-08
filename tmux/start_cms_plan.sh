@@ -5,9 +5,6 @@
 SESSION_NAME="cms-plan"
 PROJECT_DIR="$HOME/code/cms-plan"
 
-# IDE Configuration
-IDE_COMMAND="code"
-
 # Kill any existing tmux session with the same name
 tmux kill-session -t $SESSION_NAME 2>/dev/null
 
@@ -18,12 +15,9 @@ tmux new-session -d -s $SESSION_NAME -n "zsh" -c "$HOME/code/cms-plan" /bin/zsh
 tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create IDE window (window 2)
-tmux new-window -t $SESSION_NAME:2 -n "ide" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
-tmux send-keys -t $SESSION_NAME:2 "echo 'Project: $PROJECT_DIR'" C-m
-tmux send-keys -t $SESSION_NAME:2 "echo ''" C-m
-tmux send-keys -t $SESSION_NAME:2 "echo 'Run: $IDE_COMMAND .'" C-m
+# Create Zai window (window 2)
+tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "zai" C-m
 
 # Select the first window
 tmux select-window -t $SESSION_NAME:0

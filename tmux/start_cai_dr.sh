@@ -6,9 +6,6 @@ SESSION_NAME="dr"
 PACKAGE_DIR="$HOME/code/ohdsi-dr-screening"
 VIZ_DIR="$HOME/code/cai-gde-2025-retina-tp"
 
-# IDE Configuration
-IDE_COMMAND="positron"
-
 # Check if session already exists
 tmux has-session -t $SESSION_NAME 2>/dev/null
 
@@ -23,21 +20,21 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:2 -n "claude-package" -c "$PACKAGE_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:2 "claude" C-m
 
-    # Create window for claude-viz (window index 3)
-    tmux new-window -t $SESSION_NAME:3 -n "claude-viz" -c "$VIZ_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "claude" C-m
+    # Create window for zai-package (window index 3)
+    tmux new-window -t $SESSION_NAME:3 -n "zai-package" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "zai" C-m
 
-    # Create window for R (window index 4)
-    tmux new-window -t $SESSION_NAME:4 -n "R" -c "$PACKAGE_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "R" C-m
+    # Create window for claude-viz (window index 4)
+    tmux new-window -t $SESSION_NAME:4 -n "claude-viz" -c "$VIZ_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "claude" C-m
 
-    # Create IDE window (index 5)
-    tmux new-window -t $SESSION_NAME:5 -n "ide" -c "$PACKAGE_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:5 "echo '💡 IDE Launcher - Press Enter to open $IDE_COMMAND'" C-m
-    tmux send-keys -t $SESSION_NAME:5 "echo 'Package: $PACKAGE_DIR'" C-m
-    tmux send-keys -t $SESSION_NAME:5 "echo 'Viz: $VIZ_DIR'" C-m
-    tmux send-keys -t $SESSION_NAME:5 "echo ''" C-m
-    tmux send-keys -t $SESSION_NAME:5 "echo 'Run: $IDE_COMMAND .'" C-m
+    # Create window for zai-viz (window index 5)
+    tmux new-window -t $SESSION_NAME:5 -n "zai-viz" -c "$VIZ_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "zai" C-m
+
+    # Create window for R (window index 6)
+    tmux new-window -t $SESSION_NAME:6 -n "R" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:6 "R" C-m
 
     # Go back to package window (window index 0)
     tmux select-window -t $SESSION_NAME:0
