@@ -4,6 +4,7 @@
 
 SESSION_NAME="fw"
 PROJECT_DIR="$HOME/code/framework"
+PROJECT_SHELL_DIR="$HOME/code/framework-project"
 
 # Kill any existing tmux session with the same name
 tmux kill-session -t $SESSION_NAME 2>/dev/null
@@ -27,6 +28,8 @@ tmux send-keys -t $SESSION_NAME:3 "codex" C-m
 tmux new-window -t $SESSION_NAME:4 -n "R" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:4 "R" C-m
 
+# Create framework project shell (window 5)
+tmux new-window -t $SESSION_NAME:5 -n "fw-proj" -c "$PROJECT_SHELL_DIR" /bin/zsh
 
 # Select the first window
 tmux select-window -t $SESSION_NAME:0
