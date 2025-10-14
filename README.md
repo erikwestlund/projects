@@ -8,10 +8,10 @@ projects.
 - Open the `*.code-workspace` files in VS Code or Cursor to load related
   projects together.
 - Use the project manager CLI (`pm`) for repo cleanup and tmux automation.
-  Define the alias in your shell:
+  Activate the local virtualenv and add this alias to your shell profile:
 
   ```
-  alias pm="/Users/erikwestlund/code/projects/tools/project_manager.py"
+  alias pm="/Users/erikwestlund/code/projects/.venv/bin/python /Users/erikwestlund/code/projects/tools/project_manager.py"
   ```
 
 ## Key Commands

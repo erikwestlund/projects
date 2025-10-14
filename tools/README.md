@@ -7,16 +7,16 @@ of assistant documentation files so that `CLAUDE.md` remains canonical while
 
 ## Installation
 
-Install Click if it is not already available:
+Install Click inside the workspace virtualenv (located at `/Users/erikwestlund/code/projects/.venv`):
 
 ```
-pip install --user click
+/Users/erikwestlund/code/projects/.venv/bin/pip install click
 ```
 
 Add an alias in your shell profile for convenience:
 
 ```
-alias pm="/Users/erikwestlund/code/projects/tools/project_manager.py"
+alias pm="/Users/erikwestlund/code/projects/.venv/bin/python /Users/erikwestlund/code/projects/tools/project_manager.py"
 ```
 
 Ensure the script is executable (`chmod +x project_manager.py`). Now `pm
