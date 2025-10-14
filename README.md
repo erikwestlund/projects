@@ -1,11 +1,11 @@
 # Code Workspaces & Tools
 
-Workspace files for VS Code/Cursor plus supporting utilities for managing
+Workspace files for VS Code plus supporting utilities for managing
 projects.
 
 ## Usage
 
-- Open the `*.code-workspace` files in VS Code or Cursor to load related
+- Open the `*.code-workspace` files in VS Code to load related
   projects together.
 - Use the project manager CLI (`pm`) for repo cleanup and tmux automation.
   Activate the local virtualenv and add this alias to your shell profile:

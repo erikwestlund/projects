@@ -219,7 +219,7 @@ def llm_agents_group() -> None:
 
 @llm_agents_group.command("sync")
 @click.option(
-    "repo",
+    "--repo",
     "repo_path",
     default=".",
     type=click.Path(path_type=Path, exists=True, file_okay=False, dir_okay=True),

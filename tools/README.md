@@ -7,10 +7,11 @@ of assistant documentation files so that `CLAUDE.md` remains canonical while
 
 ## Installation
 
-Install Click inside the workspace virtualenv (located at `/Users/erikwestlund/code/projects/.venv`):
+Create/activate the workspace virtualenv and install Click inside it:
 
 ```
-/Users/erikwestlund/code/projects/.venv/bin/pip install click
+source /Users/erikwestlund/code/projects/.venv/bin/activate
+pip install click
 ```
 
 Add an alias in your shell profile for convenience:
