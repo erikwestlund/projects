@@ -15,9 +15,9 @@ tmux new-session -d -s $SESSION_NAME -n "zsh" -c "$HOME/code/presentations" /bin
 tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/presentations" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create Zai window (window 2)
-tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$HOME/code/presentations" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+# Create Codex window (window 2)
+tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$HOME/code/presentations" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
 # Create R console window (window 3)
 tmux new-window -t $SESSION_NAME:3 -n "R" -c "$HOME/code/presentations" /bin/zsh

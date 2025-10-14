@@ -106,13 +106,13 @@ tmux new-session -d -s $SESSION -n zsh -c "$PROJECT_DIR"
 tmux new-window -t $SESSION -n claude -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:claude" "claude" C-m
 
-# Create Zai window (window 2)
-tmux new-window -t $SESSION -n zai -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:zai" "zai" C-m
-
-# Create Codex window (window 3)
+# Create Codex window (window 2)
 tmux new-window -t $SESSION -n codex -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:codex" "codex" C-m
+
+# Create Zai window (window 3)
+tmux new-window -t $SESSION -n zai -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:zai" "zai" C-m
 
 # Create Web container access window (window 4)
 tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
@@ -161,8 +161,8 @@ echo ""
 echo "Tmux windows created:"
 echo "  • 0: zsh          : Main shell (~/code/naaccord)"
 echo "  • 1: claude       : Claude CLI"
-echo "  • 2: zai          : Zai CLI (Z.ai API)"
-echo "  • 3: codex        : Codex CLI"
+echo "  • 2: codex        : Codex CLI"
+echo "  • 3: zai          : Zai CLI (Z.ai API)"
 echo "  • 4: web          : Web container logs (port 8000)"
 echo "  • 5: services     : Services container logs (port 8001)"
 echo "  • 6: celery       : Celery worker logs and monitoring"

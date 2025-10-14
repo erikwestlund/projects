@@ -20,17 +20,17 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:2 -n "claude-package" -c "$PACKAGE_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:2 "claude" C-m
 
-    # Create window for zai-package (window index 3)
-    tmux new-window -t $SESSION_NAME:3 -n "zai-package" -c "$PACKAGE_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "zai" C-m
+    # Create window for codex-package (window index 3)
+    tmux new-window -t $SESSION_NAME:3 -n "codex-package" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "codex" C-m
 
     # Create window for claude-viz (window index 4)
     tmux new-window -t $SESSION_NAME:4 -n "claude-viz" -c "$VIZ_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:4 "claude" C-m
 
-    # Create window for zai-viz (window index 5)
-    tmux new-window -t $SESSION_NAME:5 -n "zai-viz" -c "$VIZ_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:5 "zai" C-m
+    # Create window for codex-viz (window index 5)
+    tmux new-window -t $SESSION_NAME:5 -n "codex-viz" -c "$VIZ_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex" C-m
 
     # Create window for R (window index 6)
     tmux new-window -t $SESSION_NAME:6 -n "R" -c "$PACKAGE_DIR" /bin/zsh

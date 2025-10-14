@@ -17,9 +17,9 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/parkukb" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create window for zai (window index 2)
-    tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$HOME/code/parkukb" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+    # Create window for codex (window index 2)
+    tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$HOME/code/parkukb" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
     # Create window for python (window index 3)
     tmux new-window -t $SESSION_NAME:3 -n "python" -c "$PROJECT_DIR" /bin/zsh

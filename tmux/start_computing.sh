@@ -16,13 +16,13 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/projects" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create window for zai (window index 2)
-    tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$HOME/code/projects" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+    # Create window for codex (window index 2)
+    tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$HOME/code/projects" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
-    # Create window for codex (window index 3)
-    tmux new-window -t $SESSION_NAME:3 -n "codex" -c "$HOME/code/projects" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "codex" C-m
+    # Create window for zai (window index 3)
+    tmux new-window -t $SESSION_NAME:3 -n "zai" -c "$HOME/code/projects" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "zai" C-m
 
     # Create window for dotfiles (window index 4)
     tmux new-window -t $SESSION_NAME:4 -n "dotfiles" -c "$HOME/code/dotfiles" /bin/zsh

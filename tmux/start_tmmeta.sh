@@ -43,12 +43,12 @@ tmux send-keys -t $SESSION_NAME:1.0 "claude" C-m
 tmux select-pane -t $SESSION_NAME:1.0 -T "Claude"
 tmux select-pane -t $SESSION_NAME:1.1 -T "Projects"
 
-# Create Zai window (index 2)
-tmux new-window -t $SESSION_NAME:2 -n zai -c "$CONTROL_DIR"
+# Create Codex window (index 2)
+tmux new-window -t $SESSION_NAME:2 -n codex -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:2 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:2.0
-tmux send-keys -t $SESSION_NAME:2.0 "zai" C-m
-tmux select-pane -t $SESSION_NAME:2.0 -T "Zai"
+tmux send-keys -t $SESSION_NAME:2.0 "codex" C-m
+tmux select-pane -t $SESSION_NAME:2.0 -T "Codex"
 tmux select-pane -t $SESSION_NAME:2.1 -T "Projects"
 
 # Store project colors for later use

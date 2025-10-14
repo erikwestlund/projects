@@ -16,13 +16,13 @@ tmux new-session -d -s $SESSION_NAME -n "zsh" -c "$PROJECT_DIR" /bin/zsh
 tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create Zai window (window 2)
-tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+# Create Codex window (window 2)
+tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
-# Create Codex window (window 3)
-tmux new-window -t $SESSION_NAME:3 -n "codex" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:3 "codex" C-m
+# Create Zai window (window 3)
+tmux new-window -t $SESSION_NAME:3 -n "zai" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:3 "zai" C-m
 
 # Create R console window (window 4)
 tmux new-window -t $SESSION_NAME:4 -n "R" -c "$PROJECT_DIR" /bin/zsh

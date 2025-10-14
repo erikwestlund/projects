@@ -16,9 +16,9 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/jh-sidr" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create Zai window in jh-sidr dir (window index 2)
-    tmux new-window -t $SESSION_NAME:2 -n "zai" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+    # Create Codex window in jh-sidr dir (window index 2)
+    tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$HOME/code/jh-sidr" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
     # Create new windows for jh-sidr-data and jh-sidr-data-restricted
     tmux new-window -t $SESSION_NAME:3 -n "data" -c "$HOME/code/jh-sidr-data" /bin/zsh

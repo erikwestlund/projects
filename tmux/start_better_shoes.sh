@@ -16,13 +16,13 @@ tmux new-session -d -s $SESSION_NAME -n shell -c "$PROJECT_DIR" /bin/zsh
 tmux new-window -t $SESSION_NAME:1 -n claude -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create Zai window for AI assistant (index 2)
-tmux new-window -t $SESSION_NAME:2 -n zai -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "zai" C-m
+# Create Codex window for AI assistant (index 2)
+tmux new-window -t $SESSION_NAME:2 -n codex -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "codex" C-m
 
-# Create Codex window for AI assistant (index 3)
-tmux new-window -t $SESSION_NAME:3 -n codex -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:3 "codex" C-m
+# Create Zai window for AI assistant (index 3)
+tmux new-window -t $SESSION_NAME:3 -n zai -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:3 "zai" C-m
 
 # Create Horizon window for queue processing (index 4)
 tmux new-window -t $SESSION_NAME:4 -n horizon -c "$PROJECT_DIR" /bin/zsh
