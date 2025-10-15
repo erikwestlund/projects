@@ -16,8 +16,12 @@ projects.
 
 ## Key Commands
 
-- `pm llm:agents sync --repo <path> [--dry-run]` – migrate `AGENTS.md` style files
-  back to `CLAUDE.md`, backing up older names into `.llm-graveyard/`.
+- `pm llm:agents sync --repo <path> [--dry-run]` – ensure `AGENTS.md` is the
+  canonical source file while `CLAUDE.md`/`GEMINI.md` become managed aliases
+  (backups stored under `~/.local/share/project-manager/llm-graveyard`).
+- `pm llm:agents configure --canonical AGENTS.md --alias CLAUDE.md --alias GEMINI.md`
+  – store default naming preferences (use `--show` to inspect current values).
+  Running `pm llm:agents configure` with no flags opens an interactive editor.
 - `pm tmux scaffold` – interactively create a tmux start script under
   `projects/tmux` for an existing repo.
 - `pm tmux add-tab --session <name> --name <tab> [--path <dir>]` – append extra

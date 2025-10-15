@@ -2,6 +2,7 @@
 """Project Manager CLI for personal repository maintenance tasks."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -15,11 +16,13 @@ try:
 except ModuleNotFoundError as exc:  # pragma: no cover - dependency guard
     raise SystemExit("The 'click' package is required. Install it with `pip install click`.") from exc
 
-DEFAULT_CANONICAL_NAME = "CLAUDE.md"
-DEFAULT_LEGACY_NAMES = ("AGENTS.md", "GEMINI.md")
+DEFAULT_CANONICAL_NAME = "AGENTS.md"
+DEFAULT_ALIAS_NAMES = ("CLAUDE.md", "GEMINI.md")
 GRAVEYARD_DIRNAME = ".llm-graveyard"
+DEFAULT_GRAVEYARD_ROOT = Path.home() / ".local" / "share" / "project-manager" / "llm-graveyard"
 TMUX_DIR = Path.home() / "code" / "projects" / "tmux"
 ALIASES_FILE = Path.home() / "code" / "dotfiles" / "config" / ".aliases"
+CONFIG_PATH = Path.home() / ".config" / "project-manager" / "settings.json"
 
 
 class ProjectManagerError(click.ClickException):
@@ -33,9 +36,10 @@ class ProjectManagerError(click.ClickException):
 class SyncConfig:
     repo_path: Path
     canonical_name: str
-    legacy_names: List[str]
+    alias_names: List[str]
     branch: str | None
     dry_run: bool
+    graveyard_path: Path
 
 
 @dataclass
@@ -43,6 +47,38 @@ class TmuxWindow:
     name: str
     path: Path
     commands: List[str]
+
+
+def _load_settings() -> dict:
+    if not CONFIG_PATH.exists():
+        return {}
+    try:
+        with CONFIG_PATH.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_settings(settings: dict) -> None:
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with CONFIG_PATH.open("w", encoding="utf-8") as handle:
+        json.dump(settings, handle, indent=2, sort_keys=True)
+
+
+def _llm_settings() -> dict:
+    settings = _load_settings()
+    llm_settings = settings.setdefault("llm_agents", {})
+    return settings, llm_settings
+
+
+def _slugify_path(path: Path) -> str:
+    normalized = path.expanduser().resolve()
+    parts = [p for p in normalized.parts if p not in {"", os.sep}]
+    slug = "-".join(
+        re.sub(r"[^A-Za-z0-9]+", "-", part).strip("-").lower() or "segment"
+        for part in parts
+    )
+    return slug or "repo"
 
 
 def run_git_command(repo: Path, args: List[str]) -> subprocess.CompletedProcess[str]:
@@ -96,18 +132,22 @@ def kebab_case_path(path: Path) -> str:
     return f"{basename}{suffix}"
 
 
-def ensure_graveyard(repo: Path, dry_run: bool) -> Path:
-    graveyard = repo / GRAVEYARD_DIRNAME
+def ensure_graveyard(path: Path, dry_run: bool) -> Path:
     if dry_run:
-        click.echo(f"[DRY-RUN] Would ensure graveyard directory {graveyard}")
+        click.echo(f"[DRY-RUN] Would ensure graveyard directory {path}")
     else:
-        graveyard.mkdir(parents=True, exist_ok=True)
-    return graveyard
+        path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def ensure_gitignore(repo: Path, graveyard: Path, dry_run: bool) -> None:
+    try:
+        relative_path = graveyard.relative_to(repo)
+    except ValueError:
+        return
+
     gitignore = repo / ".gitignore"
-    entry = f"{graveyard.name}/"
+    entry = f"{relative_path.as_posix()}/"
     existing_text = ""
     if gitignore.exists():
         existing_text = gitignore.read_text(encoding="utf-8")
@@ -127,10 +167,11 @@ def ensure_gitignore(repo: Path, graveyard: Path, dry_run: bool) -> None:
         gitignore.write_text(f"{entry}\n", encoding="utf-8")
 
 
-def gather_legacy_files(repo: Path, legacy_names: Iterable[str]) -> List[Path]:
+def _gather_named_files(repo: Path, names: Iterable[str]) -> List[Path]:
     matches: List[Path] = []
-    for legacy in legacy_names:
-        for path in repo.rglob(legacy):
+    unique_names = list(dict.fromkeys(names))
+    for name in unique_names:
+        for path in repo.rglob(name):
             if path.is_dir():
                 continue
             rel_parts = path.relative_to(repo).parts
@@ -140,8 +181,16 @@ def gather_legacy_files(repo: Path, legacy_names: Iterable[str]) -> List[Path]:
     return matches
 
 
-def backup_file(src: Path, graveyard: Path, dry_run: bool) -> Path:
-    rel = src.relative_to(graveyard.parent)
+def gather_alias_files(repo: Path, alias_names: Iterable[str]) -> List[Path]:
+    return _gather_named_files(repo, alias_names)
+
+
+def gather_canonical_files(repo: Path, canonical_name: str) -> List[Path]:
+    return _gather_named_files(repo, [canonical_name])
+
+
+def backup_file(src: Path, graveyard: Path, repo_path: Path, dry_run: bool) -> Path:
+    rel = src.relative_to(repo_path)
     base_target = graveyard / kebab_case_path(rel)
     if base_target.exists():
         stem = base_target.stem
@@ -165,7 +214,7 @@ def backup_file(src: Path, graveyard: Path, dry_run: bool) -> Path:
 def promote_to_canonical(src: Path, canonical: Path, dry_run: bool) -> None:
     if dry_run:
         if canonical.exists():
-            click.echo(f"[DRY-RUN] Would remove legacy file {src} (canonical already present)")
+            click.echo(f"[DRY-RUN] Would remove alternate file {src} (canonical already present)")
         else:
             click.echo(f"[DRY-RUN] Would rename {src} -> {canonical}")
         return
@@ -179,33 +228,116 @@ def promote_to_canonical(src: Path, canonical: Path, dry_run: bool) -> None:
         src.rename(canonical)
 
 
-def process_legacy_files(config: SyncConfig) -> None:
-    graveyard = ensure_graveyard(config.repo_path, config.dry_run)
+def _ensure_alias_symlink(
+    alias_path: Path,
+    canonical_path: Path,
+    graveyard: Path,
+    config: SyncConfig,
+) -> int:
+    if alias_path == canonical_path or not canonical_path.exists():
+        return 0
+
+    rel_alias = alias_path.relative_to(config.repo_path)
+    rel_canonical = canonical_path.relative_to(config.repo_path)
+    desired_target = os.path.relpath(canonical_path, alias_path.parent)
+
+    performed = 0
+
+    if alias_path.exists() or alias_path.is_symlink():
+        if alias_path.is_symlink():
+            current_target = alias_path.resolve(strict=False)
+            if current_target.exists() and current_target.resolve() == canonical_path.resolve():
+                return 0
+            if config.dry_run:
+                click.echo(f"[DRY-RUN] Would update symlink {rel_alias} -> {rel_canonical}")
+            else:
+                alias_path.unlink()
+            performed += 1
+        else:
+            backup_file(alias_path, graveyard, config.repo_path, config.dry_run)
+            if config.dry_run:
+                click.echo(f"[DRY-RUN] Would replace {rel_alias} with symlink to {rel_canonical}")
+            else:
+                alias_path.unlink()
+            performed += 1
+
+    if config.dry_run:
+        click.echo(f"[DRY-RUN] Would create symlink {rel_alias} -> {rel_canonical}")
+    else:
+        alias_path.symlink_to(desired_target)
+    performed += 1
+    return performed
+
+
+def _ensure_canonical_is_regular(canonical_path: Path, config: SyncConfig) -> int:
+    if not canonical_path.exists() or not canonical_path.is_symlink():
+        return 0
+
+    rel_canonical = canonical_path.relative_to(config.repo_path)
+    if config.dry_run:
+        click.echo(f"[DRY-RUN] Would replace symlink canonical {rel_canonical} with regular file")
+        return 1
+
+    data = canonical_path.read_bytes()
+    canonical_path.unlink()
+    canonical_path.write_bytes(data)
+    return 1
+
+
+def process_alias_files(config: SyncConfig) -> int:
+    graveyard = ensure_graveyard(config.graveyard_path, config.dry_run)
     ensure_gitignore(config.repo_path, graveyard, config.dry_run)
 
-    legacy_files = gather_legacy_files(config.repo_path, config.legacy_names)
-    if not legacy_files:
-        click.echo("No legacy files found. Nothing to do.")
-        return
+    alias_files = gather_alias_files(config.repo_path, config.alias_names)
+    canonical_files = gather_canonical_files(config.repo_path, config.canonical_name)
+    canonical_set = {path for path in canonical_files}
 
-    for legacy_path in legacy_files:
-        rel = legacy_path.relative_to(config.repo_path)
-        canonical_path = legacy_path.with_name(config.canonical_name)
-        click.echo(f"Processing {rel} -> {canonical_path.relative_to(config.repo_path)}")
-        backup_file(legacy_path, graveyard, config.dry_run)
+    processed = 0
 
-        if canonical_path.exists() and not config.dry_run:
-            try:
-                existing = canonical_path.read_bytes()
-                legacy = legacy_path.read_bytes()
-            except OSError as exc:  # pragma: no cover - filesystem errors
-                raise ProjectManagerError(f"Failed to read files while comparing {rel}: {exc}") from exc
-            if existing != legacy:
-                click.echo(
-                    f"Warning: canonical {canonical_path.relative_to(config.repo_path)} differs from legacy copy; keeping canonical."
-                )
-        promote_to_canonical(legacy_path, canonical_path, config.dry_run)
+    for canonical_path in list(canonical_set):
+        processed += _ensure_canonical_is_regular(canonical_path, config)
 
+    for alias_path in alias_files:
+        canonical_path = alias_path.with_name(config.canonical_name)
+        if not alias_path.exists() or alias_path.is_symlink():
+            continue
+        if canonical_path.exists():
+            continue
+
+        rel_alias = alias_path.relative_to(config.repo_path)
+        rel_canonical = canonical_path.relative_to(config.repo_path)
+        backup_file(alias_path, graveyard, config.repo_path, config.dry_run)
+        if config.dry_run:
+            click.echo(f"[DRY-RUN] Would promote {rel_alias} -> {rel_canonical}")
+        else:
+            canonical_path.parent.mkdir(parents=True, exist_ok=True)
+            alias_path.rename(canonical_path)
+        canonical_set.add(canonical_path)
+        processed += 1
+
+    canonical_set.update(
+        path for path in gather_canonical_files(config.repo_path, config.canonical_name)
+    )
+
+    for canonical_path in list(canonical_set):
+        processed += _ensure_canonical_is_regular(canonical_path, config)
+
+    if not canonical_set and not alias_files:
+        click.echo("No canonical or alternate assistant files found. Nothing to do.")
+        return processed
+
+    unique_alias_names = list(dict.fromkeys(config.alias_names))
+
+    for canonical_path in canonical_set:
+        if not canonical_path.exists():
+            continue
+        for alias_name in unique_alias_names:
+            if alias_name == config.canonical_name:
+                continue
+            alias_path = canonical_path.with_name(alias_name)
+            processed += _ensure_alias_symlink(alias_path, canonical_path, graveyard, config)
+
+    return processed
 
 @click.group()
 def cli() -> None:
@@ -232,43 +364,195 @@ def llm_agents_group() -> None:
 )
 @click.option(
     "--canonical",
-    default=DEFAULT_CANONICAL_NAME,
-    show_default=True,
-    help="Canonical filename to retain.",
+    default=None,
+    help="Canonical filename to retain (defaults to stored preference).",
 )
 @click.option(
-    "--legacy",
-    "legacy_names",
+    "--alias",
+    "alias_names",
     multiple=True,
-    default=DEFAULT_LEGACY_NAMES,
-    show_default=True,
-    help="Legacy filenames to promote to the canonical name.",
+    help="Alternate filenames to promote to the canonical name (repeat option).",
 )
 @click.option("--dry-run", is_flag=True, help="Preview actions without modifying files.")
 def sync_llm_agents(
     repo_path: Path,
     branch: str | None,
     canonical: str,
-    legacy_names: tuple[str, ...],
+    alias_names: tuple[str, ...],
     dry_run: bool,
 ) -> None:
-    """Canonicalize legacy LLM assistant files within a repository."""
+    """Canonicalize assistant documentation files within a repository."""
+
+    settings, llm_settings = _llm_settings()
+    effective_canonical = canonical or llm_settings.get("canonical", DEFAULT_CANONICAL_NAME)
+    if alias_names:
+        effective_aliases = list(dict.fromkeys(alias_names))
+    else:
+        stored_aliases = llm_settings.get("aliases")
+        if stored_aliases is None:
+            stored_aliases = llm_settings.get("legacy")
+        effective_aliases = list(stored_aliases) if stored_aliases else list(DEFAULT_ALIAS_NAMES)
+
+    effective_aliases = [name for name in effective_aliases if name != effective_canonical]
 
     repo = repo_path.expanduser().resolve()
-    config = SyncConfig(
+    graveyard_root = Path(
+        llm_settings.get("graveyard_root", str(DEFAULT_GRAVEYARD_ROOT))
+    ).expanduser()
+    graveyard_path = graveyard_root / _slugify_path(repo)
+
+    base_config = SyncConfig(
         repo_path=repo,
-        canonical_name=canonical,
-        legacy_names=list(dict.fromkeys(legacy_names)),
+        canonical_name=effective_canonical,
+        alias_names=effective_aliases,
         branch=branch,
         dry_run=dry_run,
+        graveyard_path=graveyard_path,
     )
 
-    ensure_git_repo(config.repo_path)
-    if config.branch:
-        ensure_clean_worktree(config.repo_path)
-        checkout_branch(config.repo_path, config.branch, config.dry_run)
+    ensure_git_repo(base_config.repo_path)
+    if base_config.branch:
+        ensure_clean_worktree(base_config.repo_path)
+        checkout_branch(base_config.repo_path, base_config.branch, dry_run)
 
-    process_legacy_files(config)
+    if dry_run:
+        process_alias_files(base_config)
+        return
+
+    preview_config = SyncConfig(
+        repo_path=base_config.repo_path,
+        canonical_name=base_config.canonical_name,
+        alias_names=base_config.alias_names,
+        branch=base_config.branch,
+        dry_run=True,
+        graveyard_path=base_config.graveyard_path,
+    )
+    click.echo("Preview (no changes made):")
+    preview_count = process_alias_files(preview_config)
+    if preview_count == 0:
+        return
+
+    if not click.confirm("Apply these changes?", default=True):
+        click.echo("Aborted without making changes.")
+        return
+
+    apply_config = SyncConfig(
+        repo_path=base_config.repo_path,
+        canonical_name=base_config.canonical_name,
+        alias_names=base_config.alias_names,
+        branch=base_config.branch,
+        dry_run=False,
+        graveyard_path=base_config.graveyard_path,
+    )
+    click.echo("Applying changes...")
+    process_alias_files(apply_config)
+
+
+@llm_agents_group.command("configure")
+@click.option(
+    "--canonical",
+    default=None,
+    help="Set the canonical filename to use by default.",
+)
+@click.option(
+    "--alias",
+    "alias_names",
+    multiple=True,
+    help="Set alternate filenames (repeat option).",
+)
+@click.option(
+    "--graveyard",
+    "graveyard_root",
+    type=click.Path(path_type=Path),
+    help="Set backup directory root (default stored globally).",
+)
+@click.option("--show", is_flag=True, help="Display current settings without modifying them.")
+def configure_llm_agents(
+    canonical: str | None,
+    alias_names: tuple[str, ...],
+    graveyard_root: Path | None,
+    show: bool,
+) -> None:
+    """Persist LLM file preferences used by sync across repositories."""
+
+    settings, llm_settings = _llm_settings()
+
+    current_graveyard_root = Path(
+        llm_settings.get("graveyard_root", str(DEFAULT_GRAVEYARD_ROOT))
+    ).expanduser()
+
+    current_canonical = llm_settings.get("canonical", DEFAULT_CANONICAL_NAME)
+    current_aliases = llm_settings.get("aliases")
+    if current_aliases is None:
+        legacy_aliases = llm_settings.get("legacy")
+        current_aliases = list(legacy_aliases) if legacy_aliases else list(DEFAULT_ALIAS_NAMES)
+
+    if graveyard_root is not None:
+        graveyard_root = graveyard_root.expanduser()
+
+    if show:
+        click.echo("Current LLM settings:")
+        click.echo(f"  canonical: {current_canonical}")
+        click.echo(f"  aliases  : {', '.join(current_aliases)}")
+        click.echo(f"  graveyard: {current_graveyard_root}")
+        return
+
+    if canonical is None and not alias_names and graveyard_root is None:
+        click.echo("Current LLM settings:")
+        click.echo(f"  canonical: {current_canonical}")
+        click.echo(f"  aliases  : {', '.join(current_aliases)}")
+        click.echo(f"  graveyard: {current_graveyard_root}")
+
+        choices = list(dict.fromkeys([current_canonical, *current_aliases]))
+        if not choices:
+            choices = [current_canonical]
+
+        canonical = click.prompt(
+            "Choose canonical filename",
+            default=current_canonical,
+        ).strip() or current_canonical
+
+        default_aliases = [name for name in choices if name != canonical]
+        alias_input = click.prompt(
+            "Alternate filenames (comma-separated)",
+            default=", ".join(default_aliases),
+        ).strip()
+        alias_names = tuple(
+            part.strip()
+            for part in alias_input.split(",")
+            if part.strip()
+        )
+        if not alias_names and default_aliases:
+            alias_names = tuple(default_aliases)
+
+        prompt_graveyard = click.prompt(
+            "Backup storage directory",
+            default=str(current_graveyard_root),
+        ).strip()
+        graveyard_root = Path(prompt_graveyard).expanduser() if prompt_graveyard else current_graveyard_root
+
+    if graveyard_root is None:
+        graveyard_root = current_graveyard_root
+
+    updated = False
+    if canonical:
+        llm_settings["canonical"] = canonical
+        updated = True
+    if alias_names:
+        llm_settings["aliases"] = list(dict.fromkeys(alias_names))
+        llm_settings.pop("legacy", None)
+        updated = True
+
+    if graveyard_root != current_graveyard_root:
+        llm_settings["graveyard_root"] = str(graveyard_root)
+        updated = True
+
+    if not updated:
+        click.echo("No changes provided. Use --canonical and/or --alias to update settings.")
+        return
+
+    _save_settings(settings)
+    click.echo("Preferences saved. Future syncs will use these defaults.")
 
 
 def _escape_double_quotes(value: str) -> str:
@@ -281,7 +565,7 @@ def _render_tmux_script(
     windows: List[TmuxWindow],
     ensure_python_venv: bool,
 ) -> str:
-    project_dir_str = _escape_double_quotes(str(project_dir))
+    project_dir_str = _escape_double_quotes(_homeify_path(project_dir))
     lines: List[str] = [
         "#!/bin/zsh",
         "",
@@ -315,7 +599,7 @@ def _render_tmux_script(
     lines.append('    tmux new-session -d -s $SESSION_NAME -n "main" -c "$PROJECT_DIR" /bin/zsh')
 
     for index, window in enumerate(windows, start=1):
-        window_path = _escape_double_quotes(str(window.path))
+        window_path = _escape_double_quotes(_homeify_path(window.path))
         lines.append(
             f'    tmux new-window -t $SESSION_NAME:{index} -n "{window.name}" -c "{window_path}" /bin/zsh'
         )
@@ -347,7 +631,7 @@ def _prompt_tmux_windows(
     project_dir: Path,
     project_type: str | None,
 ) -> tuple[List[TmuxWindow], bool, str]:
-    choices = ["data analysis", "laravel", "cli"]
+    choices = ["data", "laravel", "cli"]
     if project_type is None:
         detected_type = click.prompt(
             "Project type",
@@ -372,7 +656,7 @@ def _prompt_tmux_windows(
 
     ensure_python_venv = False
 
-    if detected_type == "data analysis":
+    if detected_type == "data":
         use_r = click.confirm("Include R tooling?", default=True)
         use_python = click.confirm("Include Python tooling (create virtualenv)?", default=False)
 
@@ -411,7 +695,7 @@ def tmux() -> None:
 @click.option(
     "--type",
     "project_type",
-    type=click.Choice(["data analysis", "laravel", "cli"], case_sensitive=False),
+    type=click.Choice(["data", "laravel", "cli"], case_sensitive=False),
     default=None,
     help="Project type to scaffold.",
 )
@@ -433,7 +717,7 @@ def tmux_scaffold(
     if not session_name:
         raise ProjectManagerError("Session name cannot be empty.")
 
-    default_dir = project_dir or (Path.home() / "code" / session_name)
+    default_dir = project_dir or Path.cwd()
     project_dir = click.prompt(
         "Project directory",
         default=str(default_dir),
@@ -450,6 +734,16 @@ def tmux_scaffold(
     _write_script(script_path, content, overwrite=force)
 
     click.echo(f"Created tmux script at {script_path}")
+
+    token = _alias_token(session_name)
+    if _ensure_aliases_for_session(session_name, script_path):
+        click.echo(
+            f"Registered aliases tm{token} and tma{token} in {ALIASES_FILE}"
+        )
+    else:
+        click.echo(
+            f"Aliases tm{token} and tma{token} already present in {ALIASES_FILE}"
+        )
 
 
 def _parse_project_dir(script_text: str) -> Path | None:
@@ -506,7 +800,7 @@ def tmux_add_tab(
     next_index = _next_window_index(text)
 
     snippet_lines = [
-        f'    tmux new-window -t $SESSION_NAME:{next_index} -n "{tab_name}" -c "{_escape_double_quotes(str(target_dir))}" /bin/zsh'
+        f'    tmux new-window -t $SESSION_NAME:{next_index} -n "{tab_name}" -c "{_escape_double_quotes(_homeify_path(target_dir))}" /bin/zsh'
     ]
     snippet = "\n" + "\n".join(snippet_lines) + "\n"
 
@@ -525,15 +819,20 @@ def _alias_token(session_name: str) -> str:
     return token
 
 
-def _path_with_tilde(path: Path) -> str:
+def _homeify_path(path: Path) -> str:
+    home = Path.home().resolve()
     try:
-        relative = path.resolve().relative_to(Path.home())
-        return f"~/{relative.as_posix()}"
+        relative = path.resolve().relative_to(home)
+        return f"$HOME/{relative.as_posix()}"
     except ValueError:
         return str(path)
 
 
-def _ensure_aliases_for_session(session_name: str, script_path: Path) -> None:
+def _path_with_tilde(path: Path) -> str:
+    return _homeify_path(path)
+
+
+def _ensure_aliases_for_session(session_name: str, script_path: Path) -> bool:
     alias_file = ALIASES_FILE
     alias_file.parent.mkdir(parents=True, exist_ok=True)
     if not alias_file.exists():
@@ -548,17 +847,19 @@ def _ensure_aliases_for_session(session_name: str, script_path: Path) -> None:
 
     additions = [line for line in (script_alias, attach_alias) if line not in existing_lines]
     if not additions:
-        return
+        return False
 
     with alias_file.open("a", encoding="utf-8") as handle:
         if content and not content.endswith("\n"):
             handle.write("\n")
         handle.write("\n".join(additions) + "\n")
+    return True
 
 
 @cli.command("new")
 @click.argument("directory")
-def new_project(directory: str) -> None:
+@click.option("--dry-run", is_flag=True, help="Preview actions without applying changes.")
+def new_project(directory: str, dry_run: bool) -> None:
     """Create a project skeleton under $HOME and scaffold tmux + aliases."""
 
     base_dir = click.prompt("Base directory under home", default="code")
@@ -566,11 +867,16 @@ def new_project(directory: str) -> None:
 
     relative_path = Path(directory)
     project_path = (base_path / relative_path).expanduser().resolve()
-    project_path.mkdir(parents=True, exist_ok=True)
+    click.echo(f"Project directory: {project_path}")
+    if dry_run:
+        click.echo("[DRY-RUN] Would create project directory if missing")
+    else:
+        project_path.mkdir(parents=True, exist_ok=True)
 
     is_empty = not any(project_path.iterdir())
     git_dir = project_path / ".git"
     if is_empty and not git_dir.exists():
+        click.echo("[INFO] Directory empty; eligible for git init")
         result = subprocess.run(
             ["git", "init"],
             cwd=str(project_path),
@@ -579,9 +885,12 @@ def new_project(directory: str) -> None:
             text=True,
             check=False,
         )
-        if result.returncode != 0:
-            raise ProjectManagerError(f"git init failed: {result.stderr.strip()}")
-        click.echo(f"Initialized git repository in {project_path}")
+        if dry_run:
+            click.echo("[DRY-RUN] Would run git init")
+        else:
+            if result.returncode != 0:
+                raise ProjectManagerError(f"git init failed: {result.stderr.strip()}")
+            click.echo(f"Initialized git repository in {project_path}")
 
     default_session = relative_path.name.replace("-", "_") or "project"
     session_name = click.prompt("Tmux session name", default=default_session).strip()
@@ -594,17 +903,37 @@ def new_project(directory: str) -> None:
     overwrite = True
     if script_path.exists():
         overwrite = click.confirm(f"{script_path} exists. Overwrite?", default=False)
-        if not overwrite:
+        if dry_run:
+            click.echo(f"[DRY-RUN] Would {'overwrite' if overwrite else 'skip overwriting'} existing script")
+            if not overwrite:
+                return
+        elif not overwrite:
             raise ProjectManagerError("Aborted: tmux script already exists.")
 
     content = _render_tmux_script(session_name, project_path, windows, ensure_python_venv)
-    _write_script(script_path, content, overwrite=overwrite)
-    click.echo(f"Created tmux script at {script_path}")
+    if dry_run:
+        click.echo(f"[DRY-RUN] Would write tmux script to {script_path}")
+    else:
+        _write_script(script_path, content, overwrite=overwrite)
+        click.echo(f"Created tmux script at {script_path}")
 
-    _ensure_aliases_for_session(session_name, script_path)
-    click.echo("Updated shell aliases for tmux session.")
+    if dry_run:
+        click.echo("[DRY-RUN] Would update shell aliases")
+    else:
+        token = _alias_token(session_name)
+        if _ensure_aliases_for_session(session_name, script_path):
+            click.echo(
+                f"Registered aliases tm{token} and tma{token} in {ALIASES_FILE}"
+            )
+        else:
+            click.echo(
+                f"Aliases tm{token} and tma{token} already present in {ALIASES_FILE}"
+            )
 
-    click.echo(f"Project directory ready at {project_path}")
+    if dry_run:
+        click.echo("Dry-run complete. Re-run without --dry-run to apply changes.")
+    else:
+        click.echo(f"Project directory ready at {project_path}")
 
 
 def main() -> None:

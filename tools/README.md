@@ -2,8 +2,8 @@
 
 `project_manager.py` provides a Click-based command line interface for personal
 repo maintenance tasks. The initial `llm:agents` command streamlines conversion
-of assistant documentation files so that `CLAUDE.md` remains canonical while
-`AGENTS.md` and other variants get backed up.
+of assistant documentation files so that `AGENTS.md` is the canonical source
+while `CLAUDE.md`, `GEMINI.md`, and other variants become managed aliases.
 
 ## Installation
 
@@ -30,18 +30,28 @@ Preview actions first:
 ```
 ./project_manager.py llm:agents sync \
   --repo /path/to/repo \
-  --legacy AGENTS.md GEMINI.md \
+  --alias CLAUDE.md \
+  --alias GEMINI.md \
   --dry-run
 ```
 
 Remove `--dry-run` to actually promote the files. The command:
 
-- Ensures `.llm-graveyard/` exists, ignoring it via `.gitignore`.
-- Backs up each legacy file into the graveyard using kebab-cased path names.
-- Promotes or retains the canonical `CLAUDE.md` (configurable with `--canonical`).
+- Backs up each alternate file into `~/.local/share/project-manager/llm-graveyard/<repo-slug>`
+  using kebab-cased path names.
+- Promotes or retains the canonical `AGENTS.md` (configurable with `--canonical`).
 - Optionally checks out a branch (`--branch main`) after verifying a clean tree.
 
-Additional legacy names can be supplied with repeated `--legacy` options.
+Additional alternate names can be supplied with repeated `--alias` options.
+
+Persist defaults so every project shares the same canonical choice:
+
+```
+pm llm:agents configure --canonical AGENTS.md --alias CLAUDE.md --alias GEMINI.md
+pm llm:agents configure --show  # inspect stored values
+# Running without flags launches an interactive prompt to pick the canonical and aliases.
+# Use `--graveyard /path/to/dir` to override the shared backup directory.
+```
 
 ## Project Creation
 
