@@ -22,12 +22,14 @@ projects.
 - `pm llm:agents configure --canonical AGENTS.md --alias CLAUDE.md --alias GEMINI.md`
   – store default naming preferences (use `--show` to inspect current values).
   Running `pm llm:agents configure` with no flags opens an interactive editor.
+- `pm llm:agents install-hook --repo <path>` – install the pre-commit hook that runs `llm-sync.sh` (use `remove-hook` to uninstall).
 - `pm tmux scaffold` – interactively create a tmux start script under
   `projects/tmux` for an existing repo.
 - `pm tmux add-tab --session <name> --name <tab> [--path <dir>]` – append extra
   tmux windows to a start script.
 - `pm new <dir>` – create a project directory under `$HOME`, optionally `git init`,
   scaffold tmux, and add `tm*`/`tma*` aliases.
+- `pm workspace --name <name>` – scaffold a VS Code/Positron workspace under `~/code/projects` with relative folder entries.
 
 ## Available Workspaces
 

@@ -62,6 +62,35 @@ aliases:
 pm new my-project
 ```
 
+## Workspace Scaffold
+
+Generate a code-workspace file that points to the current folder (or custom folders):
+
+```
+pm workspace --name my-project
+```
+
+Use repeated `--folder` flags to add more directories; paths are stored relative to `~/code/projects`.
+
+## LLM Sync Script
+
+Normalize assistant context files so only the canonical tool is editable:
+
+```
+./llm-sync.sh --repo /path/to/repo
+```
+
+- Canonical tool options: `claude`, `codex`, `copilot` (stored in `.canonical-llm-context`).
+- Alternates are stamped with a warning header and updated on each run.
+- Backups live in `~/.local/share/project-manager/llm-graveyard/<repo-slug>/`.
+
+Install or remove the git pre-commit hook via the CLI:
+
+```
+pm llm:agents install-hook --repo /path/to/repo
+pm llm:agents remove-hook --repo /path/to/repo
+```
+
 ## tmux Helpers
 
 Scaffold a new tmux start script (interactive prompts guide options for claude,

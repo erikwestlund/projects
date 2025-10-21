@@ -17,12 +17,14 @@ except ModuleNotFoundError as exc:  # pragma: no cover - dependency guard
     raise SystemExit("The 'click' package is required. Install it with `pip install click`.") from exc
 
 DEFAULT_CANONICAL_NAME = "AGENTS.md"
-DEFAULT_ALIAS_NAMES = ("CLAUDE.md", "GEMINI.md")
+DEFAULT_ALIAS_NAMES = ("CLAUDE.md", "CODEX.md", "COPILOT.md", "GEMINI.md", "AGENTS.md")
 GRAVEYARD_DIRNAME = ".llm-graveyard"
 DEFAULT_GRAVEYARD_ROOT = Path.home() / ".local" / "share" / "project-manager" / "llm-graveyard"
 TMUX_DIR = Path.home() / "code" / "projects" / "tmux"
 ALIASES_FILE = Path.home() / "code" / "dotfiles" / "config" / ".aliases"
 CONFIG_PATH = Path.home() / ".config" / "project-manager" / "settings.json"
+LLM_SYNC_SCRIPT = Path(__file__).resolve().parent / "llm-sync.sh"
+HOOK_SIGNATURE = "# llm-sync hook installed by project-manager"
 
 
 class ProjectManagerError(click.ClickException):
@@ -79,6 +81,17 @@ def _slugify_path(path: Path) -> str:
         for part in parts
     )
     return slug or "repo"
+
+
+def _ensure_llm_sync_script() -> Path:
+    script_path = LLM_SYNC_SCRIPT.resolve()
+    if not script_path.exists():
+        raise ProjectManagerError(f"llm-sync script not found at {script_path}")
+    if not os.access(script_path, os.X_OK):
+        raise ProjectManagerError(
+            f"llm-sync script is not executable: {script_path}"
+        )
+    return script_path
 
 
 def run_git_command(repo: Path, args: List[str]) -> subprocess.CompletedProcess[str]:
@@ -394,6 +407,8 @@ def sync_llm_agents(
         effective_aliases = list(stored_aliases) if stored_aliases else list(DEFAULT_ALIAS_NAMES)
 
     effective_aliases = [name for name in effective_aliases if name != effective_canonical]
+    if "AGENTS.md" not in effective_aliases and effective_canonical != "AGENTS.md":
+        effective_aliases.append("AGENTS.md")
 
     repo = repo_path.expanduser().resolve()
     graveyard_root = Path(
@@ -446,6 +461,106 @@ def sync_llm_agents(
     )
     click.echo("Applying changes...")
     process_alias_files(apply_config)
+
+
+@llm_agents_group.command("install-hook")
+@click.option(
+    "--repo",
+    "repo_path",
+    default=".",
+    type=click.Path(path_type=Path, exists=True, file_okay=False, dir_okay=True),
+    help="Repository where the hook should be installed.",
+)
+@click.option("--force", is_flag=True, help="Overwrite an existing pre-commit hook.")
+def install_llm_hook(repo_path: Path, force: bool) -> None:
+    """Install a pre-commit hook that runs llm-sync.sh before commits."""
+
+    repo = repo_path.expanduser().resolve()
+    ensure_git_repo(repo)
+    git_dir = repo / ".git"
+    if not git_dir.exists():
+        raise ProjectManagerError(
+            f"{repo} does not appear to be a git repository (missing .git directory)"
+        )
+
+    hooks_dir = git_dir / "hooks"
+    hook_path = hooks_dir / "pre-commit"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+
+    script_path = _ensure_llm_sync_script()
+
+    if hook_path.exists():
+        existing = hook_path.read_text(encoding="utf-8")
+        if HOOK_SIGNATURE not in existing and not force:
+            raise ProjectManagerError(
+                "A pre-commit hook already exists and was not installed by project-manager. "
+                "Use --force to overwrite it."
+            )
+
+    hook_lines = [
+        "#!/bin/bash",
+        "set -euo pipefail",
+        HOOK_SIGNATURE,
+        f'SCRIPT_PATH="{script_path}"',
+        'REPO_ROOT="$(git rev-parse --show-toplevel)"',
+        'if [ ! -x "$SCRIPT_PATH" ]; then',
+        '  echo "llm-sync: missing script at $SCRIPT_PATH" >&2',
+        '  exit 1',
+        'fi',
+        'output="$("$SCRIPT_PATH" --repo "$REPO_ROOT")"',
+        'status=$?',
+        'printf "%s\n" "$output"',
+        'if [ $status -ne 0 ]; then',
+        '  exit $status',
+        'fi',
+        'while IFS= read -r line; do',
+        '  case "$line" in',
+        '    "SYNCED_FILE:"*)',
+        '      file="${line#SYNCED_FILE: }"',
+        '      if [ -n "$file" ]; then',
+        '        git -C "$REPO_ROOT" add "$file"',
+        '      fi',
+        '      ;;',
+        '  esac',
+        'done <<< "$output"',
+        "",
+    ]
+    hook_path.write_text("\n".join(hook_lines) + "\n", encoding="utf-8")
+    hook_path.chmod(0o755)
+    click.echo(f"Installed pre-commit hook at {hook_path}")
+
+
+
+
+@llm_agents_group.command("remove-hook")
+@click.option(
+    "--repo",
+    "repo_path",
+    default=".",
+    type=click.Path(path_type=Path, exists=True, file_okay=False, dir_okay=True),
+    help="Repository where the hook should be removed.",
+)
+@click.option("--force", is_flag=True, help="Remove the hook even if it was not installed by project-manager.")
+def remove_llm_hook(repo_path: Path, force: bool) -> None:
+    """Remove the llm-sync pre-commit hook if present."""
+
+    repo = repo_path.expanduser().resolve()
+    ensure_git_repo(repo)
+    hooks_dir = repo / ".git" / "hooks"
+    hook_path = hooks_dir / "pre-commit"
+
+    if not hook_path.exists():
+        click.echo("No pre-commit hook found; nothing to remove.")
+        return
+
+    content = hook_path.read_text(encoding="utf-8")
+    if HOOK_SIGNATURE not in content and not force:
+        raise ProjectManagerError(
+            "Existing pre-commit hook was not installed by project-manager. Use --force to remove it."
+        )
+
+    hook_path.unlink()
+    click.echo(f"Removed pre-commit hook at {hook_path}")
 
 
 @llm_agents_group.command("configure")
@@ -661,7 +776,7 @@ def _prompt_tmux_windows(
         use_python = click.confirm("Include Python tooling (create virtualenv)?", default=False)
 
         if use_r and click.confirm("Add R REPL window?", default=True):
-            windows.append(TmuxWindow(name="r", path=project_dir, commands=["R"]))
+            windows.append(TmuxWindow(name="R", path=project_dir, commands=["R"]))
 
         if use_python:
             ensure_python_venv = True
@@ -736,9 +851,13 @@ def tmux_scaffold(
     click.echo(f"Created tmux script at {script_path}")
 
     token = _alias_token(session_name)
-    if _ensure_aliases_for_session(session_name, script_path):
+    alias_added = _ensure_aliases_for_session(session_name, script_path)
+    if alias_added:
         click.echo(
             f"Registered aliases tm{token} and tma{token} in {ALIASES_FILE}"
+        )
+        click.echo(
+            "Reminder: reload your shell (e.g. run your dotfiles bootstrap) so the new aliases are available."
         )
     else:
         click.echo(
@@ -921,9 +1040,13 @@ def new_project(directory: str, dry_run: bool) -> None:
         click.echo("[DRY-RUN] Would update shell aliases")
     else:
         token = _alias_token(session_name)
-        if _ensure_aliases_for_session(session_name, script_path):
+        alias_added = _ensure_aliases_for_session(session_name, script_path)
+        if alias_added:
             click.echo(
                 f"Registered aliases tm{token} and tma{token} in {ALIASES_FILE}"
+            )
+            click.echo(
+                "Reminder: reload your shell (e.g. run your dotfiles bootstrap) so the new aliases are available."
             )
         else:
             click.echo(
@@ -934,6 +1057,76 @@ def new_project(directory: str, dry_run: bool) -> None:
         click.echo("Dry-run complete. Re-run without --dry-run to apply changes.")
     else:
         click.echo(f"Project directory ready at {project_path}")
+
+
+@cli.command("workspace")
+@click.option(
+    "--name",
+    default=None,
+    help="Workspace filename stem (defaults to current directory name).",
+)
+@click.option(
+    "--projects-root",
+    default=str(Path.home() / "code" / "projects"),
+    type=click.Path(path_type=Path, exists=True, file_okay=False, dir_okay=True),
+    help="Directory where workspace files live (defaults to ~/code/projects).",
+)
+@click.option(
+    "--folder",
+    "folders",
+    multiple=True,
+    type=click.Path(path_type=Path),
+    help="Additional folders to include (repeatable). Defaults to current directory.",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing workspace file if present.")
+def scaffold_workspace(
+    name: str | None,
+    projects_root: Path,
+    folders: tuple[Path, ...],
+    force: bool,
+) -> None:
+    """Generate a VS Code / Positron workspace file under the projects directory."""
+
+    root = projects_root.expanduser().resolve()
+    if name is None:
+        name = Path.cwd().stem
+    name = name.strip()
+    if not name:
+        raise ProjectManagerError("Workspace name cannot be empty.")
+
+    workspace_path = root / f"{name}.code-workspace"
+    if workspace_path.exists() and not force:
+        raise ProjectManagerError(
+            f"Workspace file already exists at {workspace_path}. Use --force to overwrite."
+        )
+
+    if folders:
+        folder_paths = [path.expanduser().resolve() for path in folders]
+    else:
+        folder_paths = [Path.cwd().resolve()]
+
+    def relative_to_workspace(path: Path) -> str:
+        rel = os.path.relpath(path, start=workspace_path.parent)
+        return Path(rel).as_posix()
+
+    folder_entries = [
+        {"path": relative_to_workspace(folder_path)} for folder_path in folder_paths
+    ]
+
+    payload = {
+        "folders": folder_entries,
+        "settings": {},
+    }
+
+    workspace_path.parent.mkdir(parents=True, exist_ok=True)
+    with workspace_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+
+    click.echo(f"Created workspace at {workspace_path}")
+    click.echo("Folders:")
+    for entry in folder_entries:
+        click.echo(f"  - {entry['path']}")
 
 
 def main() -> None:
