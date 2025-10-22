@@ -25,5 +25,28 @@
 			"path": "../raycast"
 		}
 	],
-	"settings": {}
+	"settings": {
+		// Compact UI for laptop mode
+		"workbench.activityBar.location": "hidden",  // Hide activity bar to save space
+		"workbench.statusBar.visible": true,
+		"editor.minimap.enabled": false,  // Hide minimap on small screens
+		"breadcrumbs.enabled": true,
+
+		// Panel (terminal) settings - stays on right, use Cmd+J to hide/show when needed
+		"workbench.panel.defaultLocation": "right"
+
+		// Sidebar settings
+		"workbench.sideBar.location": "left",
+
+		// Editor settings for small screens
+		"editor.lineNumbers": "on",
+		"editor.folding": true,
+		"editor.glyphMargin": false,  // Remove glyph margin to save space
+
+		// Zen mode settings (Cmd+K Z to toggle)
+		"zenMode.centerLayout": false,
+		"zenMode.fullScreen": false,
+		"zenMode.hideLineNumbers": false,
+		"zenMode.restore": true
+	}
 }
