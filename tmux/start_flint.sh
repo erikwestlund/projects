@@ -16,13 +16,19 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$PROJECT_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create window for codex (window index 2)
-    tmux new-window -t $SESSION_NAME:2 -n "codex" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex" C-m
+    # Create Codex windows for different reasoning levels (windows 2-4)
+    tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
 
-    # Create window for tinker (window index 3)
-    tmux new-window -t $SESSION_NAME:3 -n "tinker" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "php artisan tinker" C-m
+    tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+
+    tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+
+    # Create window for tinker (window index 5)
+    tmux new-window -t $SESSION_NAME:5 -n "tinker" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "php artisan tinker" C-m
 
     # Go back to zsh window (window index 0)
     tmux select-window -t $SESSION_NAME:0

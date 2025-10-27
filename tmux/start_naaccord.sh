@@ -104,39 +104,45 @@ tmux new-session -d -s $SESSION -n zsh -c "$PROJECT_DIR"
 
 # Create Claude window (window 1)
 tmux new-window -t $SESSION -n claude -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:claude" "claude" C-m
+tmux send-keys -t "${SESSION}:cl" "claude" C-m
 
-# Create Codex window (window 2)
-tmux new-window -t $SESSION -n codex -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:codex" "codex" C-m
+# Create Codex windows for different reasoning levels (windows 2-4)
+tmux new-window -t $SESSION -n co-l -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:co-l" "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
 
-# Create Zai window (window 3)
+tmux new-window -t $SESSION -n co-m -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:co-m" "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+
+tmux new-window -t $SESSION -n co-h -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:co-h" "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+
+# Create Zai window (window 5)
 tmux new-window -t $SESSION -n zai -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:zai" "zai" C-m
 
-# Create Web container access window (window 4)
+# Create Web container access window (window 6)
 tmux new-window -t $SESSION -n web -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:web" "# Web container access - Django logs and shell access" C-m
 tmux send-keys -t "${SESSION}:web" 'command docker logs -f --tail 50 naaccord-test-web 2>&1' C-m
 
-# Create Services container access window (window 5)
-tmux new-window -t $SESSION -n services -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:services" "# Services container access - Django logs and shell access" C-m
-tmux send-keys -t "${SESSION}:services" 'command docker logs -f --tail 50 naaccord-test-services 2>&1' C-m
+# Create Services container access window (window 7)
+tmux new-window -t $SESSION -n srv -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:srv" "# Services container access - Django logs and shell access" C-m
+tmux send-keys -t "${SESSION}:srv" 'command docker logs -f --tail 50 naaccord-test-services 2>&1' C-m
 
-# Create Celery monitoring window (window 6)
-tmux new-window -t $SESSION -n celery -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:celery" "# Celery worker monitoring and Flower dashboard" C-m
-tmux send-keys -t "${SESSION}:celery" "echo 'Celery worker logs:'" C-m
-tmux send-keys -t "${SESSION}:celery" 'command docker logs -f --tail 50 naaccord-test-celery 2>&1' C-m
+# Create Celery monitoring window (window 8)
+tmux new-window -t $SESSION -n clry -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:clry" "# Celery worker monitoring and Flower dashboard" C-m
+tmux send-keys -t "${SESSION}:clry" "echo 'Celery worker logs:'" C-m
+tmux send-keys -t "${SESSION}:clry" 'command docker logs -f --tail 50 naaccord-test-celery 2>&1' C-m
 
-# Create NPM window (window 7)
+# Create NPM window (window 9)
 tmux new-window -t $SESSION -n npm -c "$PROJECT_DIR"
 tmux send-keys -t "${SESSION}:npm" "npm run dev" C-m
 
-# Create Docker monitoring window (window 8)
-tmux new-window -t $SESSION -n docker -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:docker" 'command docker compose logs -f --tail 50 2>&1' C-m
+# Create Docker monitoring window (window 10)
+tmux new-window -t $SESSION -n dock -c "$PROJECT_DIR"
+tmux send-keys -t "${SESSION}:dock" 'command docker compose logs -f --tail 50 2>&1' C-m
 
 # Re-select zsh window (window 0)
 tmux select-window -t "${SESSION}:zsh"
@@ -160,14 +166,16 @@ echo ""
 
 echo "Tmux windows created:"
 echo "  • 0: zsh          : Main shell (~/code/naaccord)"
-echo "  • 1: claude       : Claude CLI"
-echo "  • 2: codex        : Codex CLI"
-echo "  • 3: zai          : Zai CLI (Z.ai API)"
-echo "  • 4: web          : Web container logs (port 8000)"
-echo "  • 5: services     : Services container logs (port 8001)"
-echo "  • 6: celery       : Celery worker logs and monitoring"
-echo "  • 7: npm          : NPM dev server (port 3000)"
-echo "  • 8: docker       : Docker compose logs (all containers)"
+echo "  • 1: cl           : Claude CLI"
+echo "  • 2: co-l         : Codex CLI (low reasoning)"
+echo "  • 3: co-m         : Codex CLI (medium reasoning)"
+echo "  • 4: co-h         : Codex CLI (high reasoning)"
+echo "  • 5: zai          : Zai CLI (Z.ai API)"
+echo "  • 6: web          : Web container logs (port 8000)"
+echo "  • 7: services     : Services container logs (port 8001)"
+echo "  • 8: celery       : Celery worker logs and monitoring"
+echo "  • 9: npm          : NPM dev server (port 3000)"
+echo "  • 10: docker      : Docker compose logs (all containers)"
 echo ""
 
 echo "${GREEN}🔗 Service URLs:${NC}"

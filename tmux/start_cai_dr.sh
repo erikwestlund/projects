@@ -17,22 +17,20 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "viz" -c "$VIZ_DIR" /bin/zsh
 
     # Create window for claude-package (window index 2)
-    tmux new-window -t $SESSION_NAME:2 -n "claude-package" -c "$PACKAGE_DIR" /bin/zsh
+    tmux new-window -t $SESSION_NAME:2 -n "cl-pkg" -c "$PACKAGE_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:2 "claude" C-m
 
-    # Create window for codex-package (window index 3)
-    tmux new-window -t $SESSION_NAME:3 -n "codex-package" -c "$PACKAGE_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "codex" C-m
+    # Create Codex windows for package with different reasoning levels (windows 3-5)
+    tmux new-window -t $SESSION_NAME:3 -n "co-pkg-l" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
 
-    # Create window for claude-viz (window index 4)
-    tmux new-window -t $SESSION_NAME:4 -n "claude-viz" -c "$VIZ_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "claude" C-m
+    tmux new-window -t $SESSION_NAME:4 -n "co-pkg-m" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
 
-    # Create window for codex-viz (window index 5)
-    tmux new-window -t $SESSION_NAME:5 -n "codex-viz" -c "$VIZ_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:5 "codex" C-m
+    tmux new-window -t $SESSION_NAME:5 -n "co-pkg-h" -c "$PACKAGE_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
 
-    # Create window for R (window index 6)
+    # Create window for R (window index 10)
     tmux new-window -t $SESSION_NAME:6 -n "R" -c "$PACKAGE_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:6 "R" C-m
 

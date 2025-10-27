@@ -36,20 +36,34 @@ tmux select-pane -t $SESSION_NAME:0.0 -T "Control"
 tmux select-pane -t $SESSION_NAME:0.1 -T "Projects"
 
 # Create Claude window (index 1)
-tmux new-window -t $SESSION_NAME:1 -n claude -c "$CONTROL_DIR"
+tmux new-window -t $SESSION_NAME:1 -n cl -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:1 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:1.0
 tmux send-keys -t $SESSION_NAME:1.0 "claude" C-m
 tmux select-pane -t $SESSION_NAME:1.0 -T "Claude"
 tmux select-pane -t $SESSION_NAME:1.1 -T "Projects"
 
-# Create Codex window (index 2)
-tmux new-window -t $SESSION_NAME:2 -n codex -c "$CONTROL_DIR"
+# Create Codex windows for different reasoning levels (indexes 2-4)
+tmux new-window -t $SESSION_NAME:2 -n co-l -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:2 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:2.0
-tmux send-keys -t $SESSION_NAME:2.0 "codex" C-m
-tmux select-pane -t $SESSION_NAME:2.0 -T "Codex"
+tmux send-keys -t $SESSION_NAME:2.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+tmux select-pane -t $SESSION_NAME:2.0 -T "Codex Low"
 tmux select-pane -t $SESSION_NAME:2.1 -T "Projects"
+
+tmux new-window -t $SESSION_NAME:3 -n co-m -c "$CONTROL_DIR"
+tmux split-window -t $SESSION_NAME:3 -h -p 70 -c "$CONTROL_DIR"
+tmux select-pane -t $SESSION_NAME:3.0
+tmux send-keys -t $SESSION_NAME:3.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+tmux select-pane -t $SESSION_NAME:3.0 -T "Codex Medium"
+tmux select-pane -t $SESSION_NAME:3.1 -T "Projects"
+
+tmux new-window -t $SESSION_NAME:4 -n co-h -c "$CONTROL_DIR"
+tmux split-window -t $SESSION_NAME:4 -h -p 70 -c "$CONTROL_DIR"
+tmux select-pane -t $SESSION_NAME:4.0
+tmux send-keys -t $SESSION_NAME:4.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+tmux select-pane -t $SESSION_NAME:4.0 -T "Codex High"
+tmux select-pane -t $SESSION_NAME:4.1 -T "Projects"
 
 # Store project colors for later use
 tmux set-environment -t $SESSION_NAME PROJECT_INDEX 0

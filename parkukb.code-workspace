@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "../parkukb_v2"
+		},
+		{
 			"path": "../parkukb"
 		}
 	],
