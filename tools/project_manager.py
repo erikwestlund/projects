@@ -183,13 +183,47 @@ def ensure_gitignore(repo: Path, graveyard: Path, dry_run: bool) -> None:
 def _gather_named_files(repo: Path, names: Iterable[str]) -> List[Path]:
     matches: List[Path] = []
     unique_names = list(dict.fromkeys(names))
+
+    # Build skip list based on project type detection
+    skip_dirs = {".git", GRAVEYARD_DIRNAME}
+
+    # Always skip common build/cache directories
+    skip_dirs.update({"dist", "build", "__pycache__", ".pytest_cache", ".tox"})
+
+    # PHP projects: skip composer dependencies
+    if (repo / "composer.json").exists():
+        skip_dirs.add("vendor")
+
+    # JavaScript/Node projects: skip npm/yarn dependencies
+    if (repo / "package.json").exists():
+        skip_dirs.add("node_modules")
+
+    # Python projects: skip virtual environments
+    if any((repo / pattern).exists() for pattern in ["requirements.txt", "pyproject.toml", "setup.py", "Pipfile"]):
+        skip_dirs.update({".venv", "venv", ".env"})
+
+    # Rust projects: skip cargo build output
+    if (repo / "Cargo.toml").exists():
+        skip_dirs.add("target")
+
+    # Java/Maven projects: skip maven build output
+    if (repo / "pom.xml").exists():
+        skip_dirs.add("target")
+
+    # Go projects: skip vendor (go modules cache)
+    if (repo / "go.mod").exists():
+        skip_dirs.add("vendor")
+
     for name in unique_names:
         for path in repo.rglob(name):
             if path.is_dir():
                 continue
             rel_parts = path.relative_to(repo).parts
-            if any(part in {".git", GRAVEYARD_DIRNAME} for part in rel_parts):
+
+            # Skip if any part of the path is in our skip list
+            if any(part in skip_dirs for part in rel_parts):
                 continue
+
             matches.append(path)
     return matches
 
@@ -352,6 +386,20 @@ def process_alias_files(config: SyncConfig) -> int:
 
     return processed
 
+
+def remove_alias_symlinks(repo: Path, alias_names: Iterable[str], dry_run: bool) -> int:
+    removed = 0
+    for alias_path in gather_alias_files(repo, alias_names):
+        if not alias_path.is_symlink():
+            continue
+        rel_alias = alias_path.relative_to(repo)
+        if dry_run:
+            click.echo(f"[DRY-RUN] Would remove symlink {rel_alias}")
+        else:
+            alias_path.unlink()
+        removed += 1
+    return removed
+
 @click.group()
 def cli() -> None:
     """Personal project maintenance helpers."""
@@ -462,6 +510,70 @@ def sync_llm_agents(
     click.echo("Applying changes...")
     process_alias_files(apply_config)
 
+
+@llm_agents_group.command("unsync")
+@click.option(
+    "--repo",
+    "repo_path",
+    default=".",
+    type=click.Path(path_type=Path, exists=True, file_okay=False, dir_okay=True),
+    help="Path to the git repository (default: current directory).",
+)
+@click.option(
+    "--branch",
+    default=None,
+    help="Branch to checkout before removing symlinks (requires clean worktree).",
+)
+@click.option(
+    "--canonical",
+    default=None,
+    help="Canonical filename used for assistant documentation.",
+)
+@click.option(
+    "--alias",
+    "alias_names",
+    multiple=True,
+    help="Alternate filenames to remove if they are symlinks (repeat option).",
+)
+@click.option("--dry-run", is_flag=True, help="Preview which symlinks would be removed.")
+def unsync_llm_agents(
+    repo_path: Path,
+    branch: str | None,
+    canonical: str | None,
+    alias_names: tuple[str, ...],
+    dry_run: bool,
+) -> None:
+    """Remove assistant alias symlinks within a repository."""
+
+    _, llm_settings = _llm_settings()
+    effective_canonical = canonical or llm_settings.get("canonical", DEFAULT_CANONICAL_NAME)
+
+    if alias_names:
+        effective_aliases = list(dict.fromkeys(alias_names))
+    else:
+        stored_aliases = llm_settings.get("aliases")
+        if stored_aliases is None:
+            stored_aliases = llm_settings.get("legacy")
+        effective_aliases = list(stored_aliases) if stored_aliases else list(DEFAULT_ALIAS_NAMES)
+
+    effective_aliases = [
+        name for name in effective_aliases if name != effective_canonical
+    ]
+
+    repo = repo_path.expanduser().resolve()
+
+    ensure_git_repo(repo)
+    if branch:
+        ensure_clean_worktree(repo)
+        checkout_branch(repo, branch, dry_run)
+
+    removed = remove_alias_symlinks(repo, effective_aliases, dry_run)
+
+    if removed == 0:
+        click.echo("No assistant symlinks found.")
+    elif not dry_run:
+        noun = "symlink" if removed == 1 else "symlinks"
+        click.echo(f"Removed {removed} {noun}.")
 
 @llm_agents_group.command("install-hook")
 @click.option(
