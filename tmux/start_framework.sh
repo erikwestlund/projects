@@ -37,6 +37,14 @@ tmux send-keys -t $SESSION_NAME:6 "R" C-m
 # Create framework project shell (window 7)
 tmux new-window -t $SESSION_NAME:7 -n "fw-proj" -c "$PROJECT_SHELL_DIR" /bin/zsh
 
+# Create GUI R backend window (window 8) - Auto-reloads on R file changes
+tmux new-window -t $SESSION_NAME:8 -n "gui-r" -c "$PROJECT_DIR/gui-dev" /bin/zsh
+tmux send-keys -t $SESSION_NAME:8 "lsof -ti :8080 | xargs kill 2>/dev/null; npm run dev:server" C-m
+
+# Create GUI Vite dev server window (window 9) - Hot reload for UI
+tmux new-window -t $SESSION_NAME:9 -n "gui-ui" -c "$PROJECT_DIR/gui-dev" /bin/zsh
+tmux send-keys -t $SESSION_NAME:9 "npm run dev" C-m
+
 # Select the first window
 tmux select-window -t $SESSION_NAME:0
 

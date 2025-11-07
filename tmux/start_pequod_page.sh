@@ -13,7 +13,7 @@ sleep 0.5
 tmux new-session -d -s $SESSION_NAME -n zsh -c "$PROJECT_DIR" /bin/zsh
 
 # Create Claude window (index 1)
-tmux new-window -t $SESSION_NAME:1 -n cl -c "$PROJECT_DIR" /bin/zsh
+tmux new-window -t $SESSION_NAME:1 -n claude -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
 # Create Codex windows for different models (indexes 2-4)

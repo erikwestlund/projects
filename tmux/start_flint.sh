@@ -30,6 +30,10 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:5 -n "tinker" -c "$PROJECT_DIR" /bin/zsh
     tmux send-keys -t $SESSION_NAME:5 "php artisan tinker" C-m
 
+    tmux new-window -t $SESSION_NAME:6 -n npm -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:6 "npm run dev" C-m
+
+
     # Go back to zsh window (window index 0)
     tmux select-window -t $SESSION_NAME:0
 fi
