@@ -7,7 +7,7 @@
 			"path": "../framework-project"
 		},
 		{
-			"path": "../pequod.page"
+			"path": "../../.config/framework"
 		}
 	],
 	"settings": {}
