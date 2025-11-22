@@ -13,8 +13,14 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:2 -n "codex-low" -c "$HOME/code/r50" /bin/zsh
     tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
 
-    tmux new-window -t $SESSION_NAME:4 -n "codex-high" -c "$HOME/code/r50" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux new-window -t $SESSION_NAME:3 -n "codex-gpt" -c "$HOME/code/r50" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:3 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+
+    tmux new-window -t $SESSION_NAME:4 -n "gpt" -c "$HOME/code/r50" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5 -c model_reasoning_effort=\"high\"" C-m
+
+    tmux new-window -t $SESSION_NAME:5 -n "codex-high" -c "$HOME/code/r50" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
 
 fi
 
