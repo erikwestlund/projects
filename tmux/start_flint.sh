@@ -18,13 +18,13 @@ if [ $? != 0 ]; then
 
     # Create Codex windows for different reasoning levels (windows 2-4)
     tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+    tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+    tmux send-keys -t $SESSION_NAME:3 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
     tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 
     # Create window for tinker (window index 5)
     tmux new-window -t $SESSION_NAME:5 -n "tinker" -c "$PROJECT_DIR" /bin/zsh

@@ -17,13 +17,13 @@ tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
 # Create Codex windows for different reasoning levels (windows 2-4)
 tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 
 tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
 tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 
 # Select the first window
 tmux select-window -t $SESSION_NAME:0

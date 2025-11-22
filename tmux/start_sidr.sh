@@ -18,13 +18,13 @@ if [ $? != 0 ]; then
 
     # Create Codex windows in jh-sidr dir for different reasoning levels (windows 2-4)
     tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+    tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
     tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 
     # Create new windows for jh-sidr-data and jh-sidr-data-restricted
     tmux new-window -t $SESSION_NAME:5 -n "data" -c "$HOME/code/jh-sidr-data" /bin/zsh

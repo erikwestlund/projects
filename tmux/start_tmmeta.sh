@@ -47,21 +47,21 @@ tmux select-pane -t $SESSION_NAME:1.1 -T "Projects"
 tmux new-window -t $SESSION_NAME:2 -n co-l -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:2 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:2.0
-tmux send-keys -t $SESSION_NAME:2.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+tmux send-keys -t $SESSION_NAME:2.0 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 tmux select-pane -t $SESSION_NAME:2.0 -T "Codex Low"
 tmux select-pane -t $SESSION_NAME:2.1 -T "Projects"
 
 tmux new-window -t $SESSION_NAME:3 -n co-m -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:3 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:3.0
-tmux send-keys -t $SESSION_NAME:3.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+tmux send-keys -t $SESSION_NAME:3.0 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 tmux select-pane -t $SESSION_NAME:3.0 -T "Codex Medium"
 tmux select-pane -t $SESSION_NAME:3.1 -T "Projects"
 
 tmux new-window -t $SESSION_NAME:4 -n co-h -c "$CONTROL_DIR"
 tmux split-window -t $SESSION_NAME:4 -h -p 70 -c "$CONTROL_DIR"
 tmux select-pane -t $SESSION_NAME:4.0
-tmux send-keys -t $SESSION_NAME:4.0 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+tmux send-keys -t $SESSION_NAME:4.0 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 tmux select-pane -t $SESSION_NAME:4.0 -T "Codex High"
 tmux select-pane -t $SESSION_NAME:4.1 -T "Projects"
 

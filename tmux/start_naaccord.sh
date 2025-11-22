@@ -108,13 +108,13 @@ tmux send-keys -t "${SESSION}:cl" "claude" C-m
 
 # Create Codex windows for different reasoning levels (windows 2-4)
 tmux new-window -t $SESSION -n co-l -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:co-l" "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+tmux send-keys -t "${SESSION}:co-l" "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 
 tmux new-window -t $SESSION -n co-m -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:co-m" "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+tmux send-keys -t "${SESSION}:co-m" "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
 tmux new-window -t $SESSION -n co-h -c "$PROJECT_DIR"
-tmux send-keys -t "${SESSION}:co-h" "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+tmux send-keys -t "${SESSION}:co-h" "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 
 # Create Zai window (window 5)
 tmux new-window -t $SESSION -n zai -c "$PROJECT_DIR"

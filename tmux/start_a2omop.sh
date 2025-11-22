@@ -11,13 +11,13 @@ if [ $? != 0 ]; then
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
     tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$HOME/code/a2cps-ehr-to-omop" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5-codex -c model_reasoning_effort=\"low\"" C-m
+    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$HOME/code/a2cps-ehr-to-omop" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5-codex -c model_reasoning_effort=\"medium\"" C-m
+    tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
     tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$HOME/code/a2cps-ehr-to-omop" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
 
     tmux new-window -t $SESSION_NAME:5 -n "zai" -c "$HOME/code/a2cps-ehr-to-omop" /bin/zsh
     tmux send-keys -t $SESSION_NAME:5 "zai" C-m
