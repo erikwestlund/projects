@@ -10,17 +10,20 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/geu-causal-presentation" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$HOME/code/geu-causal-presentation" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
+    tmux new-window -t $SESSION_NAME:2 -n "co-mini" -c "$HOME/code/geu-causal-presentation" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex --full-auto --model gpt-5.1-codex-mini -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$HOME/code/geu-causal-presentation" /bin/zsh
     tmux send-keys -t $SESSION_NAME:3 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
-    tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$HOME/code/geu-causal-presentation" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux new-window -t $SESSION_NAME:4 -n "co-max" -c "$HOME/code/geu-causal-presentation" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --full-auto --model gpt-5.1-codex-max -c model_reasoning_effort=\"high\"" C-m
 
-    tmux new-window -t $SESSION_NAME:5 -n "R" -c "$HOME/code/geu-causal-presentation" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:5 "R" C-m
+    tmux new-window -t $SESSION_NAME:5 -n "co-gpt" -c "$HOME/code/geu-causal-presentation" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex --full-auto --model gpt-5.1 -c model_reasoning_effort=\"high\"" C-m
+
+    tmux new-window -t $SESSION_NAME:6 -n "R" -c "$HOME/code/geu-causal-presentation" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:6 "R" C-m
 
 fi
 

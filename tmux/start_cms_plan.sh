@@ -15,15 +15,18 @@ tmux new-session -d -s $SESSION_NAME -n "zsh" -c "$HOME/code/cms-plan" /bin/zsh
 tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-# Create Codex windows for different reasoning levels (windows 2-4)
-tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
+# Create Codex windows for different models (windows 2-5)
+tmux new-window -t $SESSION_NAME:2 -n "co-mini" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex-mini -c model_reasoning_effort=\"low\"" C-m
 
 tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$PROJECT_DIR" /bin/zsh
 tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
-tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$PROJECT_DIR" /bin/zsh
-tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
+tmux new-window -t $SESSION_NAME:4 -n "co-max" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex-max -c model_reasoning_effort=\"high\"" C-m
+
+tmux new-window -t $SESSION_NAME:5 -n "co-gpt" -c "$PROJECT_DIR" /bin/zsh
+tmux send-keys -t $SESSION_NAME:5 "codex --model gpt-5.1 -c model_reasoning_effort=\"high\"" C-m
 
 # Select the first window
 tmux select-window -t $SESSION_NAME:0

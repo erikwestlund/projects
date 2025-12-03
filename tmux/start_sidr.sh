@@ -16,32 +16,35 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/jh-sidr" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create Codex windows in jh-sidr dir for different reasoning levels (windows 2-4)
-    tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
+    # Create Codex windows in jh-sidr dir for different models (windows 2-5)
+    tmux new-window -t $SESSION_NAME:2 -n "co-mini" -c "$HOME/code/jh-sidr" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex-mini -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$HOME/code/jh-sidr" /bin/zsh
     tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
-    tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$HOME/code/jh-sidr" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux new-window -t $SESSION_NAME:4 -n "co-max" -c "$HOME/code/jh-sidr" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex-max -c model_reasoning_effort=\"high\"" C-m
+
+    tmux new-window -t $SESSION_NAME:5 -n "co-gpt" -c "$HOME/code/jh-sidr" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex --model gpt-5.1 -c model_reasoning_effort=\"high\"" C-m
 
     # Create new windows for jh-sidr-data and jh-sidr-data-restricted
-    tmux new-window -t $SESSION_NAME:5 -n "data" -c "$HOME/code/jh-sidr-data" /bin/zsh
-    tmux new-window -t $SESSION_NAME:6 -n "data-restricted" -c "$HOME/code/jh-sidr-data-restricted" /bin/zsh
-    tmux new-window -t $SESSION_NAME:7 -n "tools" -c "$HOME/code/jh-sidr-tools" /bin/zsh
+    tmux new-window -t $SESSION_NAME:6 -n "data" -c "$HOME/code/jh-sidr-data" /bin/zsh
+    tmux new-window -t $SESSION_NAME:7 -n "data-restricted" -c "$HOME/code/jh-sidr-data-restricted" /bin/zsh
+    tmux new-window -t $SESSION_NAME:8 -n "tools" -c "$HOME/code/jh-sidr-tools" /bin/zsh
 
     # Create a window for Python REPL
-    tmux new-window -t $SESSION_NAME:8 -n "python-repl" -c "$HOME/code/jh-sidr-pipeline" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:8 "source venv/bin/activate" C-m
-    tmux send-keys -t $SESSION_NAME:8 "python" C-m
+    tmux new-window -t $SESSION_NAME:9 -n "python-repl" -c "$HOME/code/jh-sidr-pipeline" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:9 "source venv/bin/activate" C-m
+    tmux send-keys -t $SESSION_NAME:9 "python" C-m
 
     # Create a window for example project
-    tmux new-window -t $SESSION_NAME:9 -n "example" -c "$HOME/code/sidr-example-project" /bin/zsh
+    tmux new-window -t $SESSION_NAME:10 -n "example" -c "$HOME/code/sidr-example-project" /bin/zsh
 
     # Create a window for R console in example project
-    tmux new-window -t $SESSION_NAME:10 -n "example-R" -c "$HOME/code/sidr-example-project" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:10 "R" C-m
+    tmux new-window -t $SESSION_NAME:11 -n "example-R" -c "$HOME/code/sidr-example-project" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:11 "R" C-m
 
     # Activate virtual environment in the pipeline window
     tmux send-keys -t $SESSION_NAME:0 "source venv/bin/activate" C-m

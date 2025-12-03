@@ -17,19 +17,22 @@ if [ $? != 0 ]; then
     tmux new-window -t $SESSION_NAME:1 -n "claude" -c "$HOME/code/parkukb_v2" /bin/zsh
     tmux send-keys -t $SESSION_NAME:1 "claude" C-m
 
-    # Create Codex windows for different reasoning levels (windows 2-4)
-    tmux new-window -t $SESSION_NAME:2 -n "co-l" -c "$HOME/code/parkukb_v2" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"low\"" C-m
+    # Create Codex windows for different models (windows 2-5)
+    tmux new-window -t $SESSION_NAME:2 -n "co-mini" -c "$HOME/code/parkukb_v2" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:2 "codex --model gpt-5.1-codex-mini -c model_reasoning_effort=\"low\"" C-m
 
     tmux new-window -t $SESSION_NAME:3 -n "co-m" -c "$HOME/code/parkukb_v2" /bin/zsh
     tmux send-keys -t $SESSION_NAME:3 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"medium\"" C-m
 
-    tmux new-window -t $SESSION_NAME:4 -n "co-h" -c "$HOME/code/parkukb_v2" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex -c model_reasoning_effort=\"high\"" C-m
+    tmux new-window -t $SESSION_NAME:4 -n "co-max" -c "$HOME/code/parkukb_v2" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:4 "codex --model gpt-5.1-codex-max -c model_reasoning_effort=\"high\"" C-m
 
-    # Create window for python (window index 5)
-    tmux new-window -t $SESSION_NAME:5 -n "python" -c "$PROJECT_DIR" /bin/zsh
-    tmux send-keys -t $SESSION_NAME:5 "python3" C-m
+    tmux new-window -t $SESSION_NAME:5 -n "co-gpt" -c "$HOME/code/parkukb_v2" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:5 "codex --model gpt-5.1 -c model_reasoning_effort=\"high\"" C-m
+
+    # Create window for python (window index 6)
+    tmux new-window -t $SESSION_NAME:6 -n "python" -c "$PROJECT_DIR" /bin/zsh
+    tmux send-keys -t $SESSION_NAME:6 "python3" C-m
 
     # Create new session with first window for shell
     tmux new-session -d -s $SESSION_NAME -n "shell" -c "$HOME/code/parkukb" /bin/zsh
