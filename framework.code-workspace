@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../.config/framework"
+		},
+		{
+			"path": "../framework-site"
 		}
 	],
 	"settings": {}

@@ -21,6 +21,8 @@ if [ $? != 0 ]; then
 
     tmux new-window -t $SESSION_NAME:5 -n "gpt-high" -c "$HOME/code/r50" /bin/zsh
     tmux send-keys -t $SESSION_NAME:5 "codex --full-auto --model gpt-5.1 -c model_reasoning_effort=\"high\"" C-m
+
+    tmux new-window -t $SESSION_NAME:6 -n "site" -c "$HOME/code/r50-code-samples-site" /bin/zsh
 fi
 
 tmux attach -t $SESSION_NAME
